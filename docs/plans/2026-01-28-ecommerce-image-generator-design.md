@@ -186,7 +186,7 @@ uvicorn
 
 **Implementation:**
 ```python
-system_instruction = load_file('Guider/reverse_prompt.md')
+system_instruction = load_file('Guidance/reverse_prompt.md')
 user_message = [uploaded_image, "请分析这张图片"]
 model = genai.GenerativeModel('gemini-2.5-pro')
 response = model.generate_content([system_instruction, user_message])
