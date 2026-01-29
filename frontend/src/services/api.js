@@ -64,6 +64,29 @@ export const generateImage = async (targetImageBase64, prompt, aspectRatio = '1:
 };
 
 /**
+ * 融合产品信息与竞品分析结果
+ */
+export const fusePrompt = async (analysisResult, productInfo) => {
+  const response = await fetch(`${API_BASE_URL}/fuse-prompt`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      analysis_result: analysisResult,
+      product_info: productInfo,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || '提示词融合失败');
+  }
+
+  return response.json();
+};
+
+/**
  * 下载Base64图片
  */
 export const downloadBase64Image = (base64Data, filename = 'generated-image.png') => {
