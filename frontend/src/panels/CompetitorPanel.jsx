@@ -3,9 +3,10 @@ import GlassCard from '../components/GlassCard';
 import ImageUpload from '../components/ImageUpload';
 import ImagePreview from '../components/ImagePreview';
 import PromptEditor from '../components/PromptEditor';
+import ProductInfoInput from '../components/ProductInfoInput';
 import { fileToBase64, analyzeImage } from '../services/api';
 
-const CompetitorPanel = ({ onPromptGenerated }) => {
+const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated }) => {
   const [competitorImage, setCompetitorImage] = useState(null);
   const [competitorImagePreview, setCompetitorImagePreview] = useState(null);
   const [prompt, setPrompt] = useState('');
@@ -102,6 +103,13 @@ const CompetitorPanel = ({ onPromptGenerated }) => {
           onChange={handlePromptChange}
           disabled={analyzing}
           placeholder="分析后的构图描述将显示在这里，可编辑优化"
+        />
+      )}
+
+      {prompt && (
+        <ProductInfoInput
+          analysisResult={prompt}
+          onFusedPromptGenerated={onFusedPromptGenerated}
         />
       )}
     </GlassCard>
