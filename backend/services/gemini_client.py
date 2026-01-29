@@ -163,6 +163,42 @@ class GeminiClient:
 
             raise ValueError(f"API响应中未找到生成的图片。响应结构: {result}")
 
+    async def fuse_prompt(self, analysis_result: str, product_info: str, system_instruction: str) -> str:
+        """
+        使用Gemini将产品信息与分析结果融合
+
+        Args:
+            analysis_result: 竞品分析得到的原始提示词
+            product_info: 用户输入的目标产品信息
+            system_instruction: 系统指令（fuse_prompt模板）
+
+        Returns:
+            融合后的提示词文本
+        """
+        url = f"{self.base_url}/v1/chat/completions"
+
+        payload = {
+            "model": self.analyze_model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": system_instruction
+                },
+                {
+                    "role": "user",
+                    "content": f"## 竞品分析模板\n\n{analysis_result}\n\n## 目标产品信息\n\n{product_info}"
+                }
+            ],
+            "temperature": 0.7
+        }
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+
+            result = response.json()
+            return result["choices"][0]["message"]["content"]
+
     def validate_image_base64(self, image_base64: str) -> bool:
         """验证Base64图片是否有效"""
         try:
