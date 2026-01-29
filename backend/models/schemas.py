@@ -31,3 +31,15 @@ class ErrorResponse(BaseModel):
     """错误响应"""
     error: str = Field(..., description="错误信息")
     status: str = Field(default="error", description="处理状态")
+
+
+class FusePromptRequest(BaseModel):
+    """提示词融合请求"""
+    analysis_result: str = Field(..., description="竞品分析得到的原始提示词")
+    product_info: str = Field(..., description="用户输入的目标产品信息")
+
+
+class FusePromptResponse(BaseModel):
+    """提示词融合响应"""
+    fused_prompt: str = Field(..., description="融合后的提示词")
+    status: str = Field(default="success", description="处理状态")
