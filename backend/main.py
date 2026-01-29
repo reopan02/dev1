@@ -11,10 +11,12 @@ from models.schemas import (
     AnalyzeResponse,
     GenerateRequest,
     GenerateResponse,
-    ErrorResponse
+    ErrorResponse,
+    FusePromptRequest,
+    FusePromptResponse
 )
 from services.gemini_client import GeminiClient
-from services.prompt_loader import load_reverse_prompt_template
+from services.prompt_loader import load_reverse_prompt_template, load_fuse_prompt_template
 
 # 加载环境变量
 load_dotenv()
@@ -44,6 +46,13 @@ try:
 except FileNotFoundError as e:
     print(f"警告: {e}")
     reverse_prompt_template = "请分析这张图片的构图、光影、背景、风格等元素，生成一段可用于图片生成的提示词。"
+
+# 加载融合提示词模板
+try:
+    fuse_prompt_template = load_fuse_prompt_template()
+except FileNotFoundError as e:
+    print(f"警告: {e}")
+    fuse_prompt_template = "请将目标产品信息融入到竞品分析模板中，生成新的图片生成提示词。"
 
 
 @app.get("/")
@@ -125,6 +134,46 @@ async def generate_product_image(request: GenerateRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"图片生成失败: {str(e)}"
+        )
+
+
+@app.post("/api/fuse-prompt", response_model=FusePromptResponse)
+async def fuse_prompt(request: FusePromptRequest):
+    """
+    融合产品信息与竞品分析结果
+
+    - **analysis_result**: 竞品分析得到的原始提示词
+    - **product_info**: 用户输入的目标产品信息
+    """
+    try:
+        # 验证输入
+        if not request.analysis_result or len(request.analysis_result.strip()) < 10:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="竞品分析结果过短"
+            )
+
+        if not request.product_info or len(request.product_info.strip()) < 2:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="请输入产品信息"
+            )
+
+        # 调用Gemini融合
+        fused = await gemini_client.fuse_prompt(
+            analysis_result=request.analysis_result,
+            product_info=request.product_info,
+            system_instruction=fuse_prompt_template
+        )
+
+        return FusePromptResponse(fused_prompt=fused.strip())
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"提示词融合失败: {str(e)}"
         )
 
 
