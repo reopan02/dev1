@@ -6,6 +6,10 @@ import './styles/glassmorphism.css';
 function App() {
   const [prompt, setPrompt] = useState('');
 
+  const handleFusedPromptGenerated = (fusedPrompt) => {
+    setPrompt(fusedPrompt);
+  };
+
   return (
     <div style={{ minHeight: '100vh' }}>
       {/* Header */}
@@ -48,7 +52,10 @@ function App() {
           gridTemplateColumns: '1fr 1fr',
           gap: '24px'
         }}>
-          <CompetitorPanel onPromptGenerated={setPrompt} />
+          <CompetitorPanel
+            onPromptGenerated={setPrompt}
+            onFusedPromptGenerated={handleFusedPromptGenerated}
+          />
           <GenerationTabContainer prompt={prompt} />
         </div>
 
@@ -60,6 +67,7 @@ function App() {
           <ol style={{ fontSize: '14px', lineHeight: '1.8', color: 'var(--text-secondary)', paddingLeft: '20px' }}>
             <li>在左侧上传竞品图片，点击"分析构图"生成提示词</li>
             <li>查看并编辑生成的构图提示词，优化描述</li>
+            <li>（可选）输入目标产品信息，点击"生成融合提示词"获得定制化提示词</li>
             <li>在右侧上传目标产品图片</li>
             <li>选择宽高比和分辨率，点击"生成图片"</li>
             <li>下载生成的图片，可多次迭代优化</li>
