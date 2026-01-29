@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import GlassCard from '../components/GlassCard';
 import ImageUpload from '../components/ImageUpload';
 import ImagePreview from '../components/ImagePreview';
+import PromptEditor from '../components/PromptEditor';
 import { fileToBase64, generateImage, downloadBase64Image } from '../services/api';
 
 const GenerationPanel = ({ prompt, tabData, onUpdateTab }) => {
   const [targetImagePreview, setTargetImagePreview] = useState(null);
   const [localPrompt, setLocalPrompt] = useState(tabData.prompt || prompt || '');
 
-  // Update local prompt when external prompt changes
+  // Update local prompt when external prompt changes (fused prompt generated)
   useEffect(() => {
-    if (prompt && !tabData.prompt) {
+    if (prompt) {
       setLocalPrompt(prompt);
       onUpdateTab({ prompt });
     }
@@ -80,6 +81,48 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab }) => {
 
   return (
     <GlassCard title="图片生成">
+      {/* Editable Fused Prompt */}
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{
+          fontSize: '12px',
+          fontWeight: '600',
+          marginBottom: '8px',
+          opacity: 0.8,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          生成提示词
+        </div>
+        <textarea
+          className="prompt-editor"
+          value={localPrompt}
+          onChange={(e) => setLocalPrompt(e.target.value)}
+          disabled={isGenerating}
+          placeholder="融合提示词将显示在这里，可编辑后用于图片生成..."
+          style={{
+            width: '100%',
+            minHeight: '120px',
+            padding: '12px',
+            background: 'rgba(255, 255, 255, 0.5)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '8px',
+            fontSize: '13px',
+            lineHeight: '1.6',
+            color: 'var(--text-primary)',
+            resize: 'vertical',
+            fontFamily: 'inherit'
+          }}
+        />
+        <div style={{
+          textAlign: 'right',
+          fontSize: '11px',
+          marginTop: '4px',
+          opacity: 0.6
+        }}>
+          {localPrompt.length} 字符
+        </div>
+      </div>
+
       <ImageUpload onImageSelect={handleImageSelect} disabled={isGenerating} />
 
       <div style={{ marginTop: '16px' }}>
