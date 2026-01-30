@@ -97,36 +97,37 @@ class GeminiClient:
         # 参考: https://yunwu.apifox.cn/api-379838953.md
         url = f"{self.base_url}/v1beta/models/{self.image_model}:generateContent"
 
-        # 构建请求体
+        # 构建请求体（使用正确的camelCase格式）
         payload = {
             "contents": [
                 {
+                    "role": "user",
                     "parts": [
                         {
-                            "text": prompt
-                        },
-                        {
-                            "inline_data": {
-                                "mime_type": "image/jpeg",
+                            "inlineData": {
+                                "mimeType": "image/jpeg",
                                 "data": reference_image_base64
                             }
+                        },
+                        {
+                            "text": prompt
                         }
                     ]
                 }
             ],
             "generationConfig": {
-                "response_modalities": ["IMAGE"]
+                "responseModalities": ["IMAGE"]
             }
         }
 
-        # 添加图片配置
+        # 添加图片配置（使用camelCase格式）
         if aspect_ratio or image_size:
             image_config = {}
             if aspect_ratio:
-                image_config["aspect_ratio"] = aspect_ratio
+                image_config["aspectRatio"] = aspect_ratio
             if image_size:
-                image_config["image_size"] = image_size
-            payload["generationConfig"]["image_config"] = image_config
+                image_config["imageSize"] = image_size
+            payload["generationConfig"]["imageConfig"] = image_config
 
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(url, headers=self._get_headers(), json=payload)
