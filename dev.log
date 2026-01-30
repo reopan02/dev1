@@ -1,0 +1,39 @@
+🚀 启动电商图片生成器 - 开发模式
+
+
+✅ 环境检查完成
+
+启动服务...
+
+🔧 启动后端服务 (http://localhost:8000)...
+INFO:     Will watch for changes in these directories: ['/mnt/e/code/e-commerce/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [1884] using WatchFiles
+🎨 启动前端服务 (http://localhost:5173)...
+
+✨ 服务已启动!
+
+📍 前端地址: http://localhost:5173
+📍 后端地址: http://localhost:8000
+📍 API文档: http://localhost:8000/docs
+
+按 Ctrl+C 停止所有服务
+
+
+> ecommerce-image-generator-frontend@1.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 728 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://10.255.255.254:5173/
+  ➜  Network: http://172.26.141.139:5173/
+INFO:     Started server process [1888]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1888]
+INFO:     Stopping reloader process [1884]
