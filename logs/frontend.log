@@ -2,9 +2,10 @@
 > ecommerce-image-generator-frontend@1.0.0 dev
 > vite
 
+Port 5173 is in use, trying another one...
 
-  VITE v5.4.21  ready in 541 ms
+  VITE v5.4.21  ready in 508 ms
 
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: http://10.255.255.254:5173/
-  ➜  Network: http://172.26.141.139:5173/
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: http://10.255.255.254:5174/
+  ➜  Network: http://172.26.141.139:5174/
