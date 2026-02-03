@@ -92,6 +92,13 @@ body {
   border-width: 3px;
 }
 
+.upload-zone:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: var(--card-bg);
+  box-shadow: 0 0 0 4px rgba(217, 119, 87, 0.2);
+}
+
 .image-preview {
   background: var(--bg-secondary);
   border-radius: 12px;
