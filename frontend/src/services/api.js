@@ -97,3 +97,28 @@ export const downloadBase64Image = (base64Data, filename = 'generated-image.png'
   link.click();
   document.body.removeChild(link);
 };
+
+/**
+ * 识别产品信息
+ * @param {string} imageBase64 - Base64编码的产品图片
+ * @param {string} mode - 识别模式: 'simple' 或 'detailed'
+ */
+export const recognizeProduct = async (imageBase64, mode = 'simple') => {
+  const response = await fetch(`${API_BASE_URL}/recognize-product`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      image: imageBase64,
+      mode: mode,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || '产品识别失败');
+  }
+
+  return response.json();
+};

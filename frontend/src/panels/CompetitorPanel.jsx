@@ -6,7 +6,7 @@ import PromptEditor from '../components/PromptEditor';
 import ProductInfoInput from '../components/ProductInfoInput';
 import { fileToBase64, analyzeImage } from '../services/api';
 
-const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated }) => {
+const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated, productInfo, onProductInfoChange }) => {
   const [competitorImage, setCompetitorImage] = useState(null);
   const [competitorImagePreview, setCompetitorImagePreview] = useState(null);
   const [prompt, setPrompt] = useState('');
@@ -97,21 +97,19 @@ const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated }) => {
         </div>
       )}
 
-      {prompt && (
-        <PromptEditor
-          value={prompt}
-          onChange={handlePromptChange}
-          disabled={analyzing}
-          placeholder="分析后的构图描述将显示在这里，可编辑优化"
-        />
-      )}
+      <PromptEditor
+        value={prompt}
+        onChange={handlePromptChange}
+        disabled={analyzing}
+        placeholder="分析后的构图描述将显示在这里，可编辑优化"
+      />
 
-      {prompt && (
-        <ProductInfoInput
-          analysisResult={prompt}
-          onFusedPromptGenerated={onFusedPromptGenerated}
-        />
-      )}
+      <ProductInfoInput
+        analysisResult={prompt}
+        onFusedPromptGenerated={onFusedPromptGenerated}
+        productInfo={productInfo}
+        onProductInfoChange={onProductInfoChange}
+      />
     </GlassCard>
   );
 };

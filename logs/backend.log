@@ -1,6 +1,2 @@
 INFO:     Will watch for changes in these directories: ['/mnt/e/code/e-commerce/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [19624] using WatchFiles
-INFO:     Started server process [19627]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
+ERROR:    [Errno 98] Address already in use

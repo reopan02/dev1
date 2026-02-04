@@ -77,7 +77,7 @@ class GeminiClient:
     async def generate_image(
         self,
         prompt: str,
-        reference_image_base64: str,
+        reference_image_base64: Optional[str] = None,
         aspect_ratio: str = "1:1",
         image_size: str = "1K"
     ) -> str:
@@ -86,7 +86,8 @@ class GeminiClient:
 
         Args:
             prompt: 构图提示词
-            reference_image_base64: Base64编码的参考图片（目标产品）
+            reference_image_base64: Base64编码的参考图片（目标产品），
+                                    为空时使用文生图模式，否则使用图生图模式
             aspect_ratio: 宽高比，如 "1:1", "16:9", "9:16"
             image_size: 分辨率，如 "1K", "2K", "4K"
 
@@ -97,22 +98,30 @@ class GeminiClient:
         # 参考: https://yunwu.apifox.cn/api-379838953.md
         url = f"{self.base_url}/v1beta/models/{self.image_model}:generateContent"
 
+        # 判断生成模式：inlineData为空（None或空字符串）时使用文生图，否则使用图生图
+        is_text_to_image = not reference_image_base64 or reference_image_base64.strip() == ""
+
         # 构建请求体（使用正确的camelCase格式）
+        if is_text_to_image:
+            # 文生图模式：仅包含文本提示词
+            parts = [{"text": prompt}]
+        else:
+            # 图生图模式：包含参考图片和文本提示词
+            parts = [
+                {
+                    "inlineData": {
+                        "mimeType": "image/jpeg",
+                        "data": reference_image_base64
+                    }
+                },
+                {"text": prompt}
+            ]
+
         payload = {
             "contents": [
                 {
                     "role": "user",
-                    "parts": [
-                        {
-                            "inlineData": {
-                                "mimeType": "image/jpeg",
-                                "data": reference_image_base64
-                            }
-                        },
-                        {
-                            "text": prompt
-                        }
-                    ]
+                    "parts": parts
                 }
             ],
             "generationConfig": {
@@ -200,21 +209,94 @@ class GeminiClient:
             result = response.json()
             return result["choices"][0]["message"]["content"]
 
-    def validate_image_base64(self, image_base64: str) -> bool:
-        """验证Base64图片是否有效"""
+    def validate_image_base64(self, image_base64: str) -> tuple[bool, str]:
+        """
+        验证Base64图片是否有效
+
+        Returns:
+            (is_valid, error_message) - 验证结果和错误信息
+        """
+        if not image_base64:
+            return False, "图片数据为空"
+
         try:
             # 移除可能的data URL前缀
+            clean_base64 = image_base64
             if "," in image_base64:
-                image_base64 = image_base64.split(",")[1]
+                clean_base64 = image_base64.split(",")[1]
 
-            # 解码并验证
-            image_data = base64.b64decode(image_base64)
-            image = Image.open(BytesIO(image_data))
+            # 检查base64字符串是否为空
+            if not clean_base64 or clean_base64.strip() == "":
+                return False, "图片数据为空"
+
+            # 解码base64
+            try:
+                image_data = base64.b64decode(clean_base64)
+            except Exception:
+                return False, "无效的Base64编码"
 
             # 检查图片大小（限制5MB）
             if len(image_data) > 5 * 1024 * 1024:
-                return False
+                return False, f"图片过大（{len(image_data) / 1024 / 1024:.1f}MB），最大支持5MB"
 
-            return True
-        except Exception:
-            return False
+            # 验证图片格式
+            try:
+                image = Image.open(BytesIO(image_data))
+                image.verify()  # 验证图片完整性
+            except Exception:
+                return False, "无效的图片格式，请上传 JPEG、PNG、GIF 或 WebP 格式"
+
+            return True, ""
+        except Exception as e:
+            return False, f"图片验证失败: {str(e)}"
+
+    def is_valid_image(self, image_base64: str) -> bool:
+        """向后兼容的简单验证方法"""
+        is_valid, _ = self.validate_image_base64(image_base64)
+        return is_valid
+
+    async def recognize_product(self, image_base64: str, system_instruction: str) -> str:
+        """
+        使用Gemini识别产品信息
+
+        Args:
+            image_base64: Base64编码的产品图片
+            system_instruction: 系统指令（识别模式提示词模板）
+
+        Returns:
+            识别出的产品信息文本
+        """
+        url = f"{self.base_url}/v1/chat/completions"
+
+        payload = {
+            "model": self.analyze_model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": system_instruction
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "请识别这张图片中的产品信息"
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_base64}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "temperature": 0.3
+        }
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+
+            result = response.json()
+            return result["choices"][0]["message"]["content"]

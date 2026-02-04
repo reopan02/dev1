@@ -5,9 +5,14 @@ import './styles/glassmorphism.css';
 
 function App() {
   const [prompt, setPrompt] = useState('');
+  const [productInfo, setProductInfo] = useState('');
 
   const handleFusedPromptGenerated = (fusedPrompt) => {
     setPrompt(fusedPrompt);
+  };
+
+  const handleProductInfoRecognized = (recognizedInfo) => {
+    setProductInfo(recognizedInfo);
   };
 
   return (
@@ -55,8 +60,13 @@ function App() {
           <CompetitorPanel
             onPromptGenerated={setPrompt}
             onFusedPromptGenerated={handleFusedPromptGenerated}
+            productInfo={productInfo}
+            onProductInfoChange={setProductInfo}
           />
-          <GenerationTabContainer prompt={prompt} />
+          <GenerationTabContainer
+            prompt={prompt}
+            onProductInfoRecognized={handleProductInfoRecognized}
+          />
         </div>
 
         {/* Instructions */}

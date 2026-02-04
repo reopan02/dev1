@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import TabBar from './TabBar';
 import GenerationPanel from '../panels/GenerationPanel';
 
-function GenerationTabContainer({ prompt }) {
+function GenerationTabContainer({ prompt, onProductInfoRecognized }) {
   const [tabs, setTabs] = useState([
     {
       id: 'tab-1',
@@ -76,6 +76,7 @@ function GenerationTabContainer({ prompt }) {
             prompt={prompt}
             tabData={activeTab}
             onUpdateTab={(updates) => updateTabData(activeTab.id, updates)}
+            onProductInfoRecognized={onProductInfoRecognized}
           />
         )}
       </div>

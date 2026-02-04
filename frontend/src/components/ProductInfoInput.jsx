@@ -1,13 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fusePrompt } from '../services/api';
 
-const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated }) => {
-  const [productInfo, setProductInfo] = useState('');
+const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated, productInfo, onProductInfoChange }) => {
+  const [localProductInfo, setLocalProductInfo] = useState(productInfo || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // 当外部 productInfo 变化时更新本地状态
+  useEffect(() => {
+    if (productInfo !== undefined) {
+      setLocalProductInfo(productInfo);
+    }
+  }, [productInfo]);
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setLocalProductInfo(value);
+    if (onProductInfoChange) {
+      onProductInfoChange(value);
+    }
+  };
+
   const handleFuse = async () => {
-    if (!productInfo.trim()) {
+    if (!localProductInfo.trim()) {
       setError('请输入产品信息');
       return;
     }
@@ -16,7 +31,7 @@ const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated }) => {
     setError(null);
 
     try {
-      const result = await fusePrompt(analysisResult, productInfo);
+      const result = await fusePrompt(analysisResult, localProductInfo);
       onFusedPromptGenerated(result.fused_prompt);
     } catch (err) {
       setError(err.message);
@@ -39,8 +54,8 @@ const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated }) => {
       </div>
       <textarea
         className="prompt-editor"
-        value={productInfo}
-        onChange={(e) => setProductInfo(e.target.value)}
+        value={localProductInfo}
+        onChange={handleChange}
         disabled={loading}
         placeholder="输入您的产品信息，如：产品名称、外观特征、核心卖点、目标人群等"
         style={{ minHeight: '100px' }}
@@ -63,7 +78,7 @@ const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated }) => {
       <button
         className="glass-button primary"
         onClick={handleFuse}
-        disabled={!productInfo.trim() || loading}
+        disabled={!localProductInfo.trim() || loading}
         style={{ width: '100%', marginTop: '12px' }}
       >
         {loading ? (

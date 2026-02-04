@@ -3,11 +3,13 @@ import GlassCard from '../components/GlassCard';
 import ImageUpload from '../components/ImageUpload';
 import ImagePreview from '../components/ImagePreview';
 import PromptEditor from '../components/PromptEditor';
-import { fileToBase64, generateImage, downloadBase64Image } from '../services/api';
+import { fileToBase64, generateImage, downloadBase64Image, recognizeProduct } from '../services/api';
 
-const GenerationPanel = ({ prompt, tabData, onUpdateTab }) => {
+const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized }) => {
   const [targetImagePreview, setTargetImagePreview] = useState(null);
   const [localPrompt, setLocalPrompt] = useState(tabData.prompt || prompt || '');
+  const [recognizing, setRecognizing] = useState(false);
+  const [recognizeError, setRecognizeError] = useState(null);
 
   // Update local prompt when external prompt changes (fused prompt generated)
   useEffect(() => {
@@ -77,6 +79,27 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab }) => {
     }
   };
 
+  const handleRecognize = async (mode) => {
+    if (!tabData.targetImage) {
+      setRecognizeError('请先上传目标产品图片');
+      return;
+    }
+
+    setRecognizing(true);
+    setRecognizeError(null);
+
+    try {
+      const result = await recognizeProduct(tabData.targetImage, mode);
+      if (onProductInfoRecognized) {
+        onProductInfoRecognized(result.product_info);
+      }
+    } catch (err) {
+      setRecognizeError(err.message);
+    } finally {
+      setRecognizing(false);
+    }
+  };
+
   const isGenerating = tabData.status === 'generating';
 
   return (
@@ -132,6 +155,68 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab }) => {
           placeholder="上传目标产品图片后显示"
         />
       </div>
+
+      {/* 产品信息识别按钮 */}
+      {tabData.targetImage && (
+        <div style={{ marginTop: '12px' }}>
+          <div style={{
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            marginBottom: '8px'
+          }}>
+            识别产品信息到左侧输入框
+          </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '8px'
+          }}>
+            <button
+              className="glass-button"
+              onClick={() => handleRecognize('simple')}
+              disabled={recognizing || isGenerating}
+              style={{ fontSize: '13px' }}
+            >
+              {recognizing ? (
+                <>
+                  <span className="loading-spinner" style={{ marginRight: '6px' }}></span>
+                  识别中...
+                </>
+              ) : (
+                '简洁识别'
+              )}
+            </button>
+            <button
+              className="glass-button"
+              onClick={() => handleRecognize('detailed')}
+              disabled={recognizing || isGenerating}
+              style={{ fontSize: '13px' }}
+            >
+              {recognizing ? (
+                <>
+                  <span className="loading-spinner" style={{ marginRight: '6px' }}></span>
+                  识别中...
+                </>
+              ) : (
+                '详细识别'
+              )}
+            </button>
+          </div>
+          {recognizeError && (
+            <div style={{
+              marginTop: '8px',
+              padding: '8px 12px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '6px',
+              fontSize: '12px',
+              color: '#DC2626'
+            }}>
+              {recognizeError}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 配置选项 */}
       <div style={{
@@ -193,7 +278,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab }) => {
       <button
         className="glass-button primary"
         onClick={handleGenerate}
-        disabled={!tabData.targetImage || !localPrompt || isGenerating}
+        disabled={!localPrompt || isGenerating}
         style={{ width: '100%', marginTop: '16px' }}
       >
         {isGenerating ? (

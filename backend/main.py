@@ -13,10 +13,12 @@ from models.schemas import (
     GenerateResponse,
     ErrorResponse,
     FusePromptRequest,
-    FusePromptResponse
+    FusePromptResponse,
+    RecognizeProductRequest,
+    RecognizeProductResponse
 )
 from services.gemini_client import GeminiClient
-from services.prompt_loader import load_reverse_prompt_template, load_fuse_prompt_template
+from services.prompt_loader import load_reverse_prompt_template, load_fuse_prompt_template, load_recognize_product_template
 
 # 加载环境变量
 load_dotenv()
@@ -70,10 +72,11 @@ async def analyze_competitor_image(request: AnalyzeRequest):
     """
     try:
         # 验证图片
-        if not gemini_client.validate_image_base64(request.image):
+        is_valid, error_msg = gemini_client.validate_image_base64(request.image)
+        if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="无效的图片格式或图片过大（最大5MB）"
+                detail=error_msg
             )
 
         # 调用Gemini分析
@@ -98,18 +101,23 @@ async def generate_product_image(request: GenerateRequest):
     """
     生成新的产品图片
 
-    - **target_image**: Base64编码的目标产品图片
+    - **target_image**: Base64编码的目标产品图片（可选，为空时使用文生图模式）
     - **prompt**: 编辑后的构图提示词
     - **aspect_ratio**: 图片宽高比（可选，默认1:1）
     - **image_size**: 图片分辨率（可选，默认1K）
     """
     try:
-        # 验证图片
-        if not gemini_client.validate_image_base64(request.target_image):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="无效的图片格式或图片过大（最大5MB）"
-            )
+        # 判断生成模式
+        is_text_to_image = not request.target_image or request.target_image.strip() == ""
+
+        # 图生图模式时验证图片
+        if not is_text_to_image:
+            is_valid, error_msg = gemini_client.validate_image_base64(request.target_image)
+            if not is_valid:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error_msg
+                )
 
         # 验证提示词
         if not request.prompt or len(request.prompt.strip()) < 10:
@@ -121,7 +129,7 @@ async def generate_product_image(request: GenerateRequest):
         # 调用Gemini生成图片
         generated_image = await gemini_client.generate_image(
             prompt=request.prompt,
-            reference_image_base64=request.target_image,
+            reference_image_base64=request.target_image if not is_text_to_image else None,
             aspect_ratio=request.aspect_ratio,
             image_size=request.image_size
         )
@@ -174,6 +182,56 @@ async def fuse_prompt(request: FusePromptRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"提示词融合失败: {str(e)}"
+        )
+
+
+@app.post("/api/recognize-product", response_model=RecognizeProductResponse)
+async def recognize_product(request: RecognizeProductRequest):
+    """
+    识别产品图片中的产品信息
+
+    - **image**: Base64编码的产品图片
+    - **mode**: 识别模式，simple(简洁) 或 detailed(详细)
+    """
+    try:
+        # 验证图片
+        is_valid, error_msg = gemini_client.validate_image_base64(request.image)
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_msg
+            )
+
+        # 验证模式
+        if request.mode not in ("simple", "detailed"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="无效的识别模式，请使用 simple 或 detailed"
+            )
+
+        # 加载对应模式的提示词模板
+        try:
+            recognize_template = load_recognize_product_template(request.mode)
+        except FileNotFoundError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"识别模板文件不存在: {request.mode}"
+            )
+
+        # 调用Gemini识别产品信息
+        product_info = await gemini_client.recognize_product(
+            image_base64=request.image,
+            system_instruction=recognize_template
+        )
+
+        return RecognizeProductResponse(product_info=product_info.strip())
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"产品识别失败: {str(e)}"
         )
 
 
