@@ -36,11 +36,6 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   };
 
   const handleGenerate = async () => {
-    if (!tabData.targetImage) {
-      onUpdateTab({ error: '请先上传目标产品图片' });
-      return;
-    }
-
     if (!localPrompt || localPrompt.trim().length < 10) {
       onUpdateTab({ error: '请先分析竞品图片生成提示词' });
       return;
