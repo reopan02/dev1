@@ -7,7 +7,7 @@ import { fileToBase64, generateImage, downloadBase64Image, recognizeProduct } fr
 
 const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized }) => {
   const [targetImagePreview, setTargetImagePreview] = useState(null);
-  const [localPrompt, setLocalPrompt] = useState(tabData.prompt || prompt || '');
+  const [localPrompt, setLocalPrompt] = useState(tabData.prompt || '');
   const [recognizing, setRecognizing] = useState(false);
   const [recognizeError, setRecognizeError] = useState(null);
 
@@ -74,7 +74,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
     }
   };
 
-  const handleRecognize = async (mode) => {
+  const handleRecognize = async () => {
     if (!tabData.targetImage) {
       setRecognizeError('请先上传目标产品图片');
       return;
@@ -84,7 +84,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
     setRecognizeError(null);
 
     try {
-      const result = await recognizeProduct(tabData.targetImage, mode);
+      const result = await recognizeProduct(tabData.targetImage);
       if (onProductInfoRecognized) {
         onProductInfoRecognized(result.product_info);
       }
@@ -99,48 +99,6 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
 
   return (
     <GlassCard title="图片生成">
-      {/* Editable Fused Prompt */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{
-          fontSize: '12px',
-          fontWeight: '600',
-          marginBottom: '8px',
-          opacity: 0.8,
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
-        }}>
-          生成提示词
-        </div>
-        <textarea
-          className="prompt-editor"
-          value={localPrompt}
-          onChange={(e) => setLocalPrompt(e.target.value)}
-          disabled={isGenerating}
-          placeholder="融合提示词将显示在这里，可编辑后用于图片生成..."
-          style={{
-            width: '100%',
-            minHeight: '120px',
-            padding: '12px',
-            background: 'rgba(255, 255, 255, 0.5)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '8px',
-            fontSize: '13px',
-            lineHeight: '1.6',
-            color: 'var(--text-primary)',
-            resize: 'vertical',
-            fontFamily: 'inherit'
-          }}
-        />
-        <div style={{
-          textAlign: 'right',
-          fontSize: '11px',
-          marginTop: '4px',
-          opacity: 0.6
-        }}>
-          {localPrompt.length} 字符
-        </div>
-      </div>
-
       <ImageUpload onImageSelect={handleImageSelect} disabled={isGenerating} />
 
       <div style={{ marginTop: '16px' }}>
@@ -161,42 +119,21 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
           }}>
             识别产品信息到左侧输入框
           </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px'
-          }}>
-            <button
-              className="glass-button"
-              onClick={() => handleRecognize('simple')}
-              disabled={recognizing || isGenerating}
-              style={{ fontSize: '13px' }}
-            >
-              {recognizing ? (
-                <>
-                  <span className="loading-spinner" style={{ marginRight: '6px' }}></span>
-                  识别中...
-                </>
-              ) : (
-                '简洁识别'
-              )}
-            </button>
-            <button
-              className="glass-button"
-              onClick={() => handleRecognize('detailed')}
-              disabled={recognizing || isGenerating}
-              style={{ fontSize: '13px' }}
-            >
-              {recognizing ? (
-                <>
-                  <span className="loading-spinner" style={{ marginRight: '6px' }}></span>
-                  识别中...
-                </>
-              ) : (
-                '详细识别'
-              )}
-            </button>
-          </div>
+          <button
+            className="glass-button"
+            onClick={() => handleRecognize()}
+            disabled={recognizing || isGenerating}
+            style={{ fontSize: '13px', width: '100%' }}
+          >
+            {recognizing ? (
+              <>
+                <span className="loading-spinner" style={{ marginRight: '6px' }}></span>
+                识别中...
+              </>
+            ) : (
+              '产品识别'
+            )}
+          </button>
           {recognizeError && (
             <div style={{
               marginTop: '8px',
@@ -267,6 +204,48 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
             <option value="2K">2K (2048px)</option>
             <option value="4K">4K (4096px)</option>
           </select>
+        </div>
+      </div>
+
+      {/* Editable Fused Prompt */}
+      <div style={{ marginTop: '16px' }}>
+        <div style={{
+          fontSize: '12px',
+          fontWeight: '600',
+          marginBottom: '8px',
+          opacity: 0.8,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          生成提示词
+        </div>
+        <textarea
+          className="prompt-editor"
+          value={localPrompt}
+          onChange={(e) => setLocalPrompt(e.target.value)}
+          disabled={isGenerating}
+          placeholder="融合提示词将显示在这里，可编辑后用于图片生成..."
+          style={{
+            width: '100%',
+            minHeight: '120px',
+            padding: '12px',
+            background: 'rgba(255, 255, 255, 0.5)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '8px',
+            fontSize: '13px',
+            lineHeight: '1.6',
+            color: 'var(--text-primary)',
+            resize: 'vertical',
+            fontFamily: 'inherit'
+          }}
+        />
+        <div style={{
+          textAlign: 'right',
+          fontSize: '11px',
+          marginTop: '4px',
+          opacity: 0.6
+        }}>
+          {localPrompt.length} 字符
         </div>
       </div>
 

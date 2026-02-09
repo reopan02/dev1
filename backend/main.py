@@ -191,7 +191,6 @@ async def recognize_product(request: RecognizeProductRequest):
     识别产品图片中的产品信息
 
     - **image**: Base64编码的产品图片
-    - **mode**: 识别模式，simple(简洁) 或 detailed(详细)
     """
     try:
         # 验证图片
@@ -202,20 +201,13 @@ async def recognize_product(request: RecognizeProductRequest):
                 detail=error_msg
             )
 
-        # 验证模式
-        if request.mode not in ("simple", "detailed"):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="无效的识别模式，请使用 simple 或 detailed"
-            )
-
-        # 加载对应模式的提示词模板
+        # 加载提示词模板
         try:
-            recognize_template = load_recognize_product_template(request.mode)
+            recognize_template = load_recognize_product_template()
         except FileNotFoundError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"识别模板文件不存在: {request.mode}"
+                detail="识别模板文件不存在"
             )
 
         # 调用Gemini识别产品信息

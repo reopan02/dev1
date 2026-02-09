@@ -41,7 +41,7 @@ export const analyzeImage = async (imageBase64) => {
 /**
  * 生成产品图片
  */
-export const generateImage = async (targetImageBase64, prompt, aspectRatio = '1:1', imageSize = '1K') => {
+export const generateImage = async (targetImageBase64, prompt, aspectRatio = '3:4', imageSize = '2K') => {
   const response = await fetch(`${API_BASE_URL}/generate`, {
     method: 'POST',
     headers: {
@@ -101,9 +101,8 @@ export const downloadBase64Image = (base64Data, filename = 'generated-image.png'
 /**
  * 识别产品信息
  * @param {string} imageBase64 - Base64编码的产品图片
- * @param {string} mode - 识别模式: 'simple' 或 'detailed'
  */
-export const recognizeProduct = async (imageBase64, mode = 'simple') => {
+export const recognizeProduct = async (imageBase64) => {
   const response = await fetch(`${API_BASE_URL}/recognize-product`, {
     method: 'POST',
     headers: {
@@ -111,7 +110,6 @@ export const recognizeProduct = async (imageBase64, mode = 'simple') => {
     },
     body: JSON.stringify({
       image: imageBase64,
-      mode: mode,
     }),
   });
 

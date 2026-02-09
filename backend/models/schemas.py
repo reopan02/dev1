@@ -51,10 +51,6 @@ class FusePromptResponse(BaseModel):
 class RecognizeProductRequest(BaseModel):
     """产品信息识别请求"""
     image: str = Field(..., description="Base64编码的产品图片")
-    mode: str = Field(
-        default="simple",
-        description="识别模式: simple(简洁) 或 detailed(详细)"
-    )
 
 
 class RecognizeProductResponse(BaseModel):

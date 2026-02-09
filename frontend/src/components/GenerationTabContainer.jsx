@@ -9,8 +9,8 @@ function GenerationTabContainer({ prompt, onProductInfoRecognized }) {
       label: 'Generation 1',
       targetImage: null,
       prompt: '',
-      aspectRatio: '1:1',
-      imageSize: '1K',
+      aspectRatio: '3:4',
+      imageSize: '2K',
       generatedImage: null,
       status: 'idle',
       error: null
@@ -29,8 +29,8 @@ function GenerationTabContainer({ prompt, onProductInfoRecognized }) {
       label: `Generation ${newTabNumber}`,
       targetImage: null,
       prompt: prompt || '',
-      aspectRatio: '1:1',
-      imageSize: '1K',
+      aspectRatio: '3:4',
+      imageSize: '2K',
       generatedImage: null,
       status: 'idle',
       error: null
