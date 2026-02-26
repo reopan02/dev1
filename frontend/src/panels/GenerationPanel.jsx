@@ -10,6 +10,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   const [localPrompt, setLocalPrompt] = useState(tabData.prompt || '');
   const [recognizing, setRecognizing] = useState(false);
   const [recognizeError, setRecognizeError] = useState(null);
+  const [textOnlyMode, setTextOnlyMode] = useState(false);
 
   // Update local prompt when external prompt changes (fused prompt generated)
   useEffect(() => {
@@ -22,6 +23,10 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   const handleImageSelect = async (file) => {
     try {
       onUpdateTab({ error: null });
+      // 释放旧的预览 URL
+      if (targetImagePreview) {
+        URL.revokeObjectURL(targetImagePreview);
+      }
       // 显示预览
       const previewUrl = URL.createObjectURL(file);
       setTargetImagePreview(previewUrl);
@@ -49,7 +54,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
 
     try {
       const result = await generateImage(
-        tabData.targetImage,
+        textOnlyMode ? null : tabData.targetImage,
         localPrompt,
         tabData.aspectRatio,
         tabData.imageSize
@@ -99,7 +104,59 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
 
   return (
     <GlassCard title="图片生成">
-      <ImageUpload onImageSelect={handleImageSelect} disabled={isGenerating} />
+      {/* 文生图模式开关 */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '16px',
+        padding: '10px 14px',
+        background: textOnlyMode ? 'rgba(217, 119, 87, 0.08)' : 'rgba(0, 0, 0, 0.02)',
+        border: `1px solid ${textOnlyMode ? 'rgba(217, 119, 87, 0.3)' : 'var(--border-subtle)'}`,
+        borderRadius: '8px',
+        transition: 'all 0.3s ease'
+      }}>
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+            文生图模式
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+            {textOnlyMode ? '仅使用提示词生成，不使用参考图片' : '使用参考图片 + 提示词生成'}
+          </div>
+        </div>
+        <div
+          onClick={() => !isGenerating && setTextOnlyMode(!textOnlyMode)}
+          style={{
+            width: '44px',
+            height: '24px',
+            borderRadius: '12px',
+            background: textOnlyMode ? 'var(--accent-primary)' : 'var(--border-subtle)',
+            cursor: isGenerating ? 'not-allowed' : 'pointer',
+            position: 'relative',
+            transition: 'background 0.3s ease',
+            flexShrink: 0,
+            marginLeft: '12px',
+            opacity: isGenerating ? 0.5 : 1
+          }}
+        >
+          <div style={{
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            background: 'white',
+            position: 'absolute',
+            top: '2px',
+            left: textOnlyMode ? '22px' : '2px',
+            transition: 'left 0.3s ease',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+          }} />
+        </div>
+      </div>
+
+      {/* 图片上传与产品识别（文生图模式下隐藏） */}
+      {!textOnlyMode && (
+        <>
+          <ImageUpload onImageSelect={handleImageSelect} disabled={isGenerating} />
 
       <div style={{ marginTop: '16px' }}>
         <ImagePreview
@@ -148,6 +205,9 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
             </div>
           )}
         </div>
+      )}
+
+        </>
       )}
 
       {/* 配置选项 */}

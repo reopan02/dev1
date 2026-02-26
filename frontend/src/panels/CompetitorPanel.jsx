@@ -16,6 +16,10 @@ const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated, productInf
   const handleImageSelect = async (file) => {
     try {
       setError(null);
+      // 释放旧的预览 URL
+      if (competitorImagePreview) {
+        URL.revokeObjectURL(competitorImagePreview);
+      }
       // 显示预览
       const previewUrl = URL.createObjectURL(file);
       setCompetitorImagePreview(previewUrl);

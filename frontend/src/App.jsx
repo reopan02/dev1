@@ -58,7 +58,7 @@ function App() {
           gap: '24px'
         }}>
           <CompetitorPanel
-            onPromptGenerated={setPrompt}
+            onPromptGenerated={() => {}}
             onFusedPromptGenerated={handleFusedPromptGenerated}
             productInfo={productInfo}
             onProductInfoChange={setProductInfo}

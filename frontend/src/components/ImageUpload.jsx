@@ -60,6 +60,8 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
     if (files && files[0]) {
       handleFile(files[0]);
     }
+    // 重置 input 值，确保再次选择同一文件时也能触发 onChange
+    e.target.value = '';
   };
 
   const handleFile = async (file) => {

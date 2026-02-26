@@ -1,6 +1,13 @@
 INFO:     Will watch for changes in these directories: ['/mnt/e/code/e-commerce/backend']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [1585] using WatchFiles
-INFO:     Started server process [1592]
+INFO:     Started reloader process [2407] using WatchFiles
+INFO:     Started server process [2410]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+INFO:     127.0.0.1:54788 - "POST /api/analyze HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57224 - "POST /api/recognize-product HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35792 - "POST /api/fuse-prompt HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35822 - "POST /api/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53184 - "POST /api/fuse-prompt HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33046 - "POST /api/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54930 - "POST /api/generate HTTP/1.1" 200 OK
