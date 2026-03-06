@@ -13,3 +13,11 @@ INFO:     Finished server process [1078]
 INFO:     Started server process [1197]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/gemini_client.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1197]
+INFO:     Started server process [1303]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

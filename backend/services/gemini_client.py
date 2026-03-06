@@ -11,7 +11,7 @@ class GeminiClient:
 
     def __init__(self):
         self.api_key = os.getenv("YUNWU_API_KEY")
-        self.base_url = os.getenv("YUNWU_BASE_URL", "https://yunwu.zeabur.app/v1")
+        self.base_url = os.getenv("YUNWU_BASE_URL")
         self.analyze_model = os.getenv("GEMINI_ANALYZE_MODEL", "gemini-2.5-pro")
         self.image_model = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3-pro-image-preview")
 
