@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 import os
+import traceback
 from pathlib import Path
 
 from models.schemas import (
@@ -90,6 +91,7 @@ async def analyze_competitor_image(request: AnalyzeRequest):
     except HTTPException:
         raise
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"图片分析失败: {str(e)}"

@@ -66,7 +66,7 @@ class GeminiClient:
             "temperature": 0.7
         }
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=180.0) as client:
             response = await client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
 
@@ -138,7 +138,7 @@ class GeminiClient:
                 image_config["imageSize"] = image_size
             payload["generationConfig"]["imageConfig"] = image_config
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=180.0) as client:
             response = await client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
             result = response.json()
@@ -202,7 +202,7 @@ class GeminiClient:
             "temperature": 0.7
         }
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=180.0) as client:
             response = await client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
 
@@ -294,7 +294,7 @@ class GeminiClient:
             "temperature": 0.3
         }
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=180.0) as client:
             response = await client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
 
