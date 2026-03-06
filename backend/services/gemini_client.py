@@ -130,10 +130,12 @@ class GeminiClient:
         }
 
         # 添加图片配置（使用camelCase格式）
-        if aspect_ratio or image_size:
+        # 当 aspect_ratio 为 "auto" 时不传输具体尺寸，让API自动决定
+        effective_aspect_ratio = aspect_ratio if aspect_ratio and aspect_ratio != "auto" else None
+        if effective_aspect_ratio or image_size:
             image_config = {}
-            if aspect_ratio:
-                image_config["aspectRatio"] = aspect_ratio
+            if effective_aspect_ratio:
+                image_config["aspectRatio"] = effective_aspect_ratio
             if image_size:
                 image_config["imageSize"] = image_size
             payload["generationConfig"]["imageConfig"] = image_config

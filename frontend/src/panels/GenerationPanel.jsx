@@ -41,8 +41,8 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   };
 
   const handleGenerate = async () => {
-    if (!localPrompt || localPrompt.trim().length < 10) {
-      onUpdateTab({ error: '请先分析竞品图片生成提示词' });
+    if (!localPrompt || localPrompt.trim().length === 0) {
+      onUpdateTab({ error: '请输入生成提示词' });
       return;
     }
 
@@ -221,26 +221,27 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
           <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
             宽高比
           </label>
-          <select
-            value={tabData.aspectRatio}
-            onChange={(e) => onUpdateTab({ aspectRatio: e.target.value })}
-            disabled={isGenerating}
-            style={{
-              width: '100%',
-              padding: '8px',
-              background: 'white',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '8px',
-              color: 'var(--text-primary)',
-              fontSize: '13px'
-            }}
-          >
-            <option value="1:1">1:1 (正方形)</option>
-            <option value="16:9">16:9 (横向)</option>
-            <option value="9:16">9:16 (竖向)</option>
-            <option value="4:3">4:3 (横向)</option>
-            <option value="3:4">3:4 (竖向)</option>
-          </select>
+           <select
+             value={tabData.aspectRatio}
+             onChange={(e) => onUpdateTab({ aspectRatio: e.target.value })}
+             disabled={isGenerating}
+             style={{
+               width: '100%',
+               padding: '8px',
+               background: 'white',
+               border: '1px solid var(--border-subtle)',
+               borderRadius: '8px',
+               color: 'var(--text-primary)',
+               fontSize: '13px'
+             }}
+           >
+             <option value="auto">自动 (Auto)</option>
+             <option value="1:1">1:1 (正方形)</option>
+             <option value="16:9">16:9 (横向)</option>
+             <option value="9:16">9:16 (竖向)</option>
+             <option value="4:3">4:3 (横向)</option>
+             <option value="3:4">3:4 (竖向)</option>
+           </select>
         </div>
         <div>
           <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
@@ -284,7 +285,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
           value={localPrompt}
           onChange={(e) => setLocalPrompt(e.target.value)}
           disabled={isGenerating}
-          placeholder="融合提示词将显示在这里，可编辑后用于图片生成..."
+          placeholder="输入或粘贴生成提示词（也可从左侧分析竞品后获取）..."
           style={{
             width: '100%',
             minHeight: '120px',

@@ -120,10 +120,10 @@ async def generate_product_image(request: GenerateRequest):
                 )
 
         # 验证提示词
-        if not request.prompt or len(request.prompt.strip()) < 10:
+        if not request.prompt or len(request.prompt.strip()) == 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="提示词过短，请提供详细的构图描述"
+                detail="提示词不能为空"
             )
 
         # 调用Gemini生成图片
