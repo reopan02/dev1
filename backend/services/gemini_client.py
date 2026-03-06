@@ -7,16 +7,16 @@ from PIL import Image
 
 
 class GeminiClient:
-    """云雾API中转站的Gemini客户端"""
+    """Gemini API客户端（通过代理）"""
 
     def __init__(self):
-        self.api_key = os.getenv("YUNWU_API_KEY")
         self.base_url = os.getenv("YUNWU_BASE_URL")
+        self.api_key = os.getenv("GEMINI_API_KEY")
         self.analyze_model = os.getenv("GEMINI_ANALYZE_MODEL", "gemini-2.5-pro")
         self.image_model = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3-pro-image-preview")
 
         if not self.api_key:
-            raise ValueError("YUNWU_API_KEY环境变量未设置")
+            raise ValueError("GEMINI_API_KEY环境变量未设置")
 
     def _get_headers(self) -> Dict[str, str]:
         """获取请求头"""
@@ -27,7 +27,7 @@ class GeminiClient:
 
     async def analyze_image(self, image_base64: str, system_instruction: str) -> str:
         """
-        使用Gemini 2.5 Pro分析图片并生成提示词
+        使用豆包模型分析图片并生成提示词
 
         Args:
             image_base64: Base64编码的图片
@@ -36,10 +36,10 @@ class GeminiClient:
         Returns:
             生成的提示词文本
         """
-        # 根据云雾API文档，使用chat兼容格式
+        # 使用OpenAI兼容格式（如果模型支持vision）
         url = f"{self.base_url}/v1/chat/completions"
 
-        # 构建消息
+        # 构建消息 - 尝试使用vision格式
         payload = {
             "model": self.analyze_model,
             "messages": [
@@ -64,7 +64,6 @@ class GeminiClient:
                 }
             ],
             "temperature": 0.7
-            #"max_tokens": 1024
         }
 
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -94,8 +93,7 @@ class GeminiClient:
         Returns:
             Base64编码的生成图片
         """
-        # 根据云雾API文档，使用Gemini原生格式
-        # 参考: https://yunwu.apifox.cn/api-379838953.md
+        # 使用Gemini原生格式
         url = f"{self.base_url}/v1beta/models/{self.image_model}:generateContent"
 
         # 判断生成模式：inlineData为空（None或空字符串）时使用文生图，否则使用图生图
@@ -177,7 +175,7 @@ class GeminiClient:
 
     async def fuse_prompt(self, analysis_result: str, product_info: str, system_instruction: str) -> str:
         """
-        使用Gemini将产品信息与分析结果融合
+        使用豆包将产品信息与分析结果融合
 
         Args:
             analysis_result: 竞品分析得到的原始提示词
@@ -259,7 +257,7 @@ class GeminiClient:
 
     async def recognize_product(self, image_base64: str, system_instruction: str) -> str:
         """
-        使用Gemini识别产品信息
+        使用豆包识别产品信息
 
         Args:
             image_base64: Base64编码的产品图片

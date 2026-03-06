@@ -31,8 +31,12 @@ export const analyzeImage = async (imageBase64) => {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || '图片分析失败');
+    let detail = '图片分析失败';
+    try {
+      const error = await response.json();
+      detail = error.detail || detail;
+    } catch {}
+    throw new Error(detail);
   }
 
   return response.json();
@@ -56,8 +60,12 @@ export const generateImage = async (targetImageBase64, prompt, aspectRatio = '3:
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || '图片生成失败');
+    let detail = '图片生成失败';
+    try {
+      const error = await response.json();
+      detail = error.detail || detail;
+    } catch {}
+    throw new Error(detail);
   }
 
   return response.json();
@@ -79,8 +87,12 @@ export const fusePrompt = async (analysisResult, productInfo) => {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || '提示词融合失败');
+    let detail = '提示词融合失败';
+    try {
+      const error = await response.json();
+      detail = error.detail || detail;
+    } catch {}
+    throw new Error(detail);
   }
 
   return response.json();
@@ -114,8 +126,12 @@ export const recognizeProduct = async (imageBase64) => {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || '产品识别失败');
+    let detail = '产品识别失败';
+    try {
+      const error = await response.json();
+      detail = error.detail || detail;
+    } catch {}
+    throw new Error(detail);
   }
 
   return response.json();

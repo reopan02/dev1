@@ -1,23 +1,7 @@
 INFO:     Will watch for changes in these directories: ['/mnt/e/code/e-commerce/backend']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [1075] using WatchFiles
-INFO:     Started server process [1078]
+INFO:     Started reloader process [1048] using WatchFiles
+INFO:     Started server process [1058]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:48448 - "POST /api/generate HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'services/gemini_client.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [1078]
-INFO:     Started server process [1197]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/gemini_client.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [1197]
-INFO:     Started server process [1303]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
+INFO:     127.0.0.1:52350 - "POST /api/analyze HTTP/1.1" 200 OK
