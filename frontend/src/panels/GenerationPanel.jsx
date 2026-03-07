@@ -67,7 +67,8 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
         textOnlyMode ? null : tabData.targetImage,
         localPrompt,
         tabData.aspectRatio,
-        tabData.imageSize
+        tabData.imageSize,
+        tabData.model
       );
       onUpdateTab({
         generatedImage: result.generated_image,
@@ -237,10 +238,32 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
       {/* 配置选项 */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: '1fr 1fr 1fr',
         gap: '12px',
         marginTop: '16px'
       }}>
+        <div>
+          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+            生成模型
+          </label>
+          <select
+            value={tabData.model || 'gemini-3-pro-image-preview'}
+            onChange={(e) => onUpdateTab({ model: e.target.value })}
+            disabled={isGenerating}
+            style={{
+              width: '100%',
+              padding: '8px',
+              background: 'white',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '8px',
+              color: 'var(--text-primary)',
+              fontSize: '13px'
+            }}
+          >
+            <option value="gemini-3-pro-image-preview">Gemini 3 Pro</option>
+            <option value="gemini-3.1-flash-image-preview">Gemini 3.1 Flash</option>
+          </select>
+        </div>
         <div>
           <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
             宽高比

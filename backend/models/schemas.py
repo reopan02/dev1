@@ -22,6 +22,7 @@ class GenerateRequest(BaseModel):
     prompt: str = Field(..., description="编辑后的构图提示词")
     aspect_ratio: Optional[str] = Field(default="1:1", description="图片宽高比")
     image_size: Optional[str] = Field(default="1K", description="图片分辨率: 1K, 2K, 4K")
+    model: Optional[str] = Field(default="gemini-3-pro-image-preview", description="图片生成模型")
 
 
 class GenerateResponse(BaseModel):

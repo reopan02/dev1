@@ -11,6 +11,7 @@ function GenerationTabContainer({ prompt, onProductInfoRecognized }) {
       prompt: '',
       aspectRatio: '3:4',
       imageSize: '2K',
+      model: 'gemini-3-pro-image-preview',
       generatedImage: null,
       status: 'idle',
       error: null
@@ -31,6 +32,7 @@ function GenerationTabContainer({ prompt, onProductInfoRecognized }) {
       prompt: prompt || '',
       aspectRatio: '3:4',
       imageSize: '2K',
+      model: 'gemini-3-pro-image-preview',
       generatedImage: null,
       status: 'idle',
       error: null

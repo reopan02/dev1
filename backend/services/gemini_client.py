@@ -32,7 +32,8 @@ class GeminiClient:
         prompt: str,
         reference_image_base64: Optional[str] = None,
         aspect_ratio: str = "1:1",
-        image_size: str = "1K"
+        image_size: str = "1K",
+        model: Optional[str] = None
     ) -> str:
         """
         使用Gemini图片生成API
@@ -47,8 +48,9 @@ class GeminiClient:
         Returns:
             Base64编码的生成图片
         """
-        # 使用Gemini原生格式
-        url = f"{self.base_url}/v1beta/models/{self.image_model}:generateContent"
+        # 使用Gemini原生格式，支持动态模型选择
+        effective_model = model or self.image_model
+        url = f"{self.base_url}/v1beta/models/{effective_model}:generateContent"
 
         # 判断生成模式：inlineData为空（None或空字符串）时使用文生图，否则使用图生图
         is_text_to_image = not reference_image_base64 or reference_image_base64.strip() == ""

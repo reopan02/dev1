@@ -45,7 +45,7 @@ export const analyzeImage = async (imageBase64) => {
 /**
  * 生成产品图片
  */
-export const generateImage = async (targetImageBase64, prompt, aspectRatio = '3:4', imageSize = '2K') => {
+export const generateImage = async (targetImageBase64, prompt, aspectRatio = '3:4', imageSize = '2K', model = 'gemini-3-pro-image-preview') => {
   const response = await fetch(`${API_BASE_URL}/generate`, {
     method: 'POST',
     headers: {
@@ -56,6 +56,7 @@ export const generateImage = async (targetImageBase64, prompt, aspectRatio = '3:
       prompt: prompt,
       aspect_ratio: aspectRatio,
       image_size: imageSize,
+      model: model,
     }),
   });
 

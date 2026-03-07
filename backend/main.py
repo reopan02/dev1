@@ -164,7 +164,8 @@ async def generate_product_image(request: GenerateRequest):
             prompt=request.prompt,
             reference_image_base64=request.target_image if not is_text_to_image else None,
             aspect_ratio=request.aspect_ratio,
-            image_size=request.image_size
+            image_size=request.image_size,
+            model=request.model
         )
 
         return GenerateResponse(generated_image=generated_image)
