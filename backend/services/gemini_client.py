@@ -7,12 +7,14 @@ from PIL import Image
 
 
 class GeminiClient:
-    """Gemini API客户端（通过代理）"""
+    """Gemini API客户端 — 仅用于图片生成（通过Gemini原生API）
+
+    文本LLM调用已迁移至 LLMManager (services/llm_manager.py)。
+    """
 
     def __init__(self):
         self.base_url = os.getenv("YUNWU_BASE_URL")
         self.api_key = os.getenv("GEMINI_API_KEY")
-        self.analyze_model = os.getenv("GEMINI_ANALYZE_MODEL", "gemini-2.5-pro")
         self.image_model = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3-pro-image-preview")
 
         if not self.api_key:
@@ -24,54 +26,6 @@ class GeminiClient:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
-
-    async def analyze_image(self, image_base64: str, system_instruction: str) -> str:
-        """
-        使用豆包模型分析图片并生成提示词
-
-        Args:
-            image_base64: Base64编码的图片
-            system_instruction: 系统指令（reverse_prompt模板）
-
-        Returns:
-            生成的提示词文本
-        """
-        # 使用OpenAI兼容格式（如果模型支持vision）
-        url = f"{self.base_url}/v1/chat/completions"
-
-        # 构建消息 - 尝试使用vision格式
-        payload = {
-            "model": self.analyze_model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": system_instruction
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "请分析这张电商图片并生成构图提示词"
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{image_base64}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            "temperature": 0.7
-        }
-
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            response = await client.post(url, headers=self._get_headers(), json=payload)
-            response.raise_for_status()
-
-            result = response.json()
-            return result["choices"][0]["message"]["content"]
 
     async def generate_image(
         self,
@@ -173,42 +127,6 @@ class GeminiClient:
 
             raise ValueError(f"API响应中未找到生成的图片。响应结构: {result}")
 
-    async def fuse_prompt(self, analysis_result: str, product_info: str, system_instruction: str) -> str:
-        """
-        使用豆包将产品信息与分析结果融合
-
-        Args:
-            analysis_result: 竞品分析得到的原始提示词
-            product_info: 用户输入的目标产品信息
-            system_instruction: 系统指令（fuse_prompt模板）
-
-        Returns:
-            融合后的提示词文本
-        """
-        url = f"{self.base_url}/v1/chat/completions"
-
-        payload = {
-            "model": self.analyze_model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": system_instruction
-                },
-                {
-                    "role": "user",
-                    "content": f"## 竞品分析模板\n\n{analysis_result}\n\n## 目标产品信息\n\n{product_info}"
-                }
-            ],
-            "temperature": 0.7
-        }
-
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            response = await client.post(url, headers=self._get_headers(), json=payload)
-            response.raise_for_status()
-
-            result = response.json()
-            return result["choices"][0]["message"]["content"]
-
     def validate_image_base64(self, image_base64: str) -> tuple[bool, str]:
         """
         验证Base64图片是否有效
@@ -254,49 +172,3 @@ class GeminiClient:
         """向后兼容的简单验证方法"""
         is_valid, _ = self.validate_image_base64(image_base64)
         return is_valid
-
-    async def recognize_product(self, image_base64: str, system_instruction: str) -> str:
-        """
-        使用豆包识别产品信息
-
-        Args:
-            image_base64: Base64编码的产品图片
-            system_instruction: 系统指令（识别模式提示词模板）
-
-        Returns:
-            识别出的产品信息文本
-        """
-        url = f"{self.base_url}/v1/chat/completions"
-
-        payload = {
-            "model": self.analyze_model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": system_instruction
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "请识别这张图片中的产品信息"
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{image_base64}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            "temperature": 0.3
-        }
-
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            response = await client.post(url, headers=self._get_headers(), json=payload)
-            response.raise_for_status()
-
-            result = response.json()
-            return result["choices"][0]["message"]["content"]

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { fusePrompt } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { fusePromptStream } from '../services/api';
 
 const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated, productInfo, onProductInfoChange }) => {
   const [localProductInfo, setLocalProductInfo] = useState(productInfo || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const abortControllerRef = useRef(null);
 
   // 当外部 productInfo 变化时更新本地状态
   useEffect(() => {
@@ -12,6 +13,15 @@ const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated, productInfo,
       setLocalProductInfo(productInfo);
     }
   }, [productInfo]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -27,17 +37,32 @@ const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated, productInfo,
       return;
     }
 
+    // Cancel any previous stream
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     setLoading(true);
     setError(null);
 
-    try {
-      const result = await fusePrompt(analysisResult, localProductInfo);
-      onFusedPromptGenerated(result.fused_prompt);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    let accumulated = '';
+    await fusePromptStream(
+      analysisResult,
+      localProductInfo,
+      (chunk) => {
+        accumulated += chunk;
+      },
+      () => {
+        onFusedPromptGenerated(accumulated);
+        setLoading(false);
+      },
+      (err) => {
+        setError(err.message || '融合失败');
+        setLoading(false);
+      },
+      abortControllerRef.current.signal
+    );
   };
 
   return (

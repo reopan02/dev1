@@ -136,3 +136,120 @@ export const recognizeProduct = async (imageBase64) => {
 
   return response.json();
 };
+
+/**
+ * 通用SSE流式POST请求工具
+ * @param {string} url - 请求URL
+ * @param {object} body - 请求体
+ * @param {function} onChunk - 收到文本块时的回调 (chunk: string) => void
+ * @param {function} onDone - 流结束时的回调 () => void
+ * @param {function} onError - 出错时的回调 (error: Error) => void
+ * @param {AbortSignal} [signal] - 用于取消请求的AbortSignal
+ */
+export const streamPost = async (url, body, onChunk, onDone, onError, signal) => {
+  let response;
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    onError(err);
+    return;
+  }
+
+  if (!response.ok) {
+    let detail = '请求失败';
+    try {
+      const error = await response.json();
+      detail = error.detail || detail;
+    } catch {}
+    onError(new Error(detail));
+    return;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n\n');
+      buffer = lines.pop(); // 保留未完成的行
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const dataStr = trimmed.slice(5).trim();
+        if (dataStr === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(dataStr);
+          if (parsed.done === true) {
+            onDone();
+            return;
+          }
+          if (parsed.error) {
+            onError(new Error(parsed.error));
+            return;
+          }
+          if (parsed.content !== undefined) {
+            onChunk(parsed.content);
+          }
+        } catch {}
+      }
+    }
+    onDone();
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    onError(err);
+  }
+};
+
+/**
+ * 流式分析竞品图片
+ */
+export const analyzeImageStream = (imageBase64, onChunk, onDone, onError, signal) => {
+  return streamPost(
+    `${API_BASE_URL}/analyze`,
+    { image: imageBase64 },
+    onChunk,
+    onDone,
+    onError,
+    signal
+  );
+};
+
+/**
+ * 流式融合产品信息与竞品分析结果
+ */
+export const fusePromptStream = (analysisResult, productInfo, onChunk, onDone, onError, signal) => {
+  return streamPost(
+    `${API_BASE_URL}/fuse-prompt`,
+    { analysis_result: analysisResult, product_info: productInfo },
+    onChunk,
+    onDone,
+    onError,
+    signal
+  );
+};
+
+/**
+ * 流式识别产品信息
+ */
+export const recognizeProductStream = (imageBase64, onChunk, onDone, onError, signal) => {
+  return streamPost(
+    `${API_BASE_URL}/recognize-product`,
+    { image: imageBase64 },
+    onChunk,
+    onDone,
+    onError,
+    signal
+  );
+};

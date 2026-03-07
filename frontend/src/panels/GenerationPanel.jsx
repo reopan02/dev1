@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
 import ImageUpload from '../components/ImageUpload';
 import ImagePreview from '../components/ImagePreview';
 import PromptEditor from '../components/PromptEditor';
-import { fileToBase64, generateImage, downloadBase64Image, recognizeProduct } from '../services/api';
+import { fileToBase64, generateImage, downloadBase64Image, recognizeProductStream } from '../services/api';
 
 const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized }) => {
   const [targetImagePreview, setTargetImagePreview] = useState(null);
@@ -11,6 +11,16 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   const [recognizing, setRecognizing] = useState(false);
   const [recognizeError, setRecognizeError] = useState(null);
   const [textOnlyMode, setTextOnlyMode] = useState(false);
+  const abortControllerRef = useRef(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   // Update local prompt when external prompt changes (fused prompt generated)
   useEffect(() => {
@@ -85,19 +95,33 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
       return;
     }
 
+    // Cancel any previous stream
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     setRecognizing(true);
     setRecognizeError(null);
 
-    try {
-      const result = await recognizeProduct(tabData.targetImage);
-      if (onProductInfoRecognized) {
-        onProductInfoRecognized(result.product_info);
-      }
-    } catch (err) {
-      setRecognizeError(err.message);
-    } finally {
-      setRecognizing(false);
-    }
+    let accumulated = '';
+    await recognizeProductStream(
+      tabData.targetImage,
+      (chunk) => {
+        accumulated += chunk;
+      },
+      () => {
+        if (onProductInfoRecognized) {
+          onProductInfoRecognized(accumulated);
+        }
+        setRecognizing(false);
+      },
+      (err) => {
+        setRecognizeError(err.message || '识别失败');
+        setRecognizing(false);
+      },
+      abortControllerRef.current.signal
+    );
   };
 
   const isGenerating = tabData.status === 'generating';

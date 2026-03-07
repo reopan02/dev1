@@ -5,3 +5,5 @@ python-dotenv>=1.0.0
 Pillow>=11.0.0
 httpx[socks]>=0.26.0
 pydantic>=2.5.3
+langchain-openai>=0.3.0
+pydantic-settings>=2.0.0

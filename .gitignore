@@ -1,1 +1,71 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ===== Node.js =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ===== Build Output =====
+backend/static/
+dist/
+build/
+
+# ===== Environment =====
+.env
+.env.local
+.env.*.local
+*.local
+
+# ===== IDE / Editor =====
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-*
+.project
+.classpath
+.settings/
+
+# ===== OS =====
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===== Logs =====
 logs/
+*.log
+dev.log
+
+# ===== Test / Temp =====
+tests.zip
+*.tmp
+*.temp
+.cache/
+
+# ===== Project Specific =====
+.sisyphus/
+

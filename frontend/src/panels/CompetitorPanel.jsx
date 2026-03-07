@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import GlassCard from '../components/GlassCard';
 import ImageUpload from '../components/ImageUpload';
 import ImagePreview from '../components/ImagePreview';
 import PromptEditor from '../components/PromptEditor';
 import ProductInfoInput from '../components/ProductInfoInput';
-import { fileToBase64, analyzeImage } from '../services/api';
+import { fileToBase64, analyzeImageStream } from '../services/api';
 
 const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated, productInfo, onProductInfoChange }) => {
   const [competitorImage, setCompetitorImage] = useState(null);
@@ -12,6 +12,16 @@ const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated, productInf
   const [prompt, setPrompt] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState(null);
+  const abortControllerRef = useRef(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleImageSelect = async (file) => {
     try {
@@ -39,19 +49,33 @@ const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated, productInf
       return;
     }
 
+    // Cancel any previous stream
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     setAnalyzing(true);
     setError(null);
+    setPrompt('');
 
-    try {
-      const result = await analyzeImage(competitorImage);
-      setPrompt(result.prompt);
-      onPromptGenerated(result.prompt);
-    } catch (err) {
-      setError(err.message);
-      console.error(err);
-    } finally {
-      setAnalyzing(false);
-    }
+    let accumulated = '';
+    await analyzeImageStream(
+      competitorImage,
+      (chunk) => {
+        accumulated += chunk;
+        setPrompt(accumulated);
+      },
+      () => {
+        onPromptGenerated(accumulated);
+        setAnalyzing(false);
+      },
+      (err) => {
+        setError(err.message || '分析失败');
+        setAnalyzing(false);
+      },
+      abortControllerRef.current.signal
+    );
   };
 
   const handlePromptChange = (newPrompt) => {
