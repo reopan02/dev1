@@ -1,9 +1,10 @@
-import os
 import base64
 import httpx
 from typing import Dict, Any, Optional
 from io import BytesIO
 from PIL import Image
+
+from config import Settings
 
 
 class GeminiClient:
@@ -12,13 +13,13 @@ class GeminiClient:
     文本LLM调用已迁移至 LLMManager (services/llm_manager.py)。
     """
 
-    def __init__(self):
-        self.base_url = os.getenv("YUNWU_BASE_URL")
-        self.api_key = os.getenv("GEMINI_API_KEY")
-        self.image_model = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3-pro-image-preview")
+    def __init__(self, settings: Settings):
+        self.base_url = settings.gemini_image_base_url
+        self.api_key = settings.gemini_image_api_key.get_secret_value()
+        self.image_model = settings.image_model
 
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY环境变量未设置")
+            raise ValueError("GEMINI_IMAGE_API_KEY环境变量未设置")
 
     def _get_headers(self) -> Dict[str, str]:
         """获取请求头"""

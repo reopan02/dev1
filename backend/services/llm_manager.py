@@ -27,9 +27,9 @@ class LLMManager:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        api_key = settings.gemini_api_key.get_secret_value()
+        api_key = settings.gemini_analyze_api_key.get_secret_value()
         self.model = ChatOpenAI(
-            base_url=settings.openai_base_url,
+            base_url=settings.analyze_openai_base_url,
             api_key=api_key,  # type: ignore[arg-type]
             model=settings.llm_model,
             temperature=settings.llm_temperature,
@@ -39,9 +39,9 @@ class LLMManager:
 
     def _make_model(self, temperature: float) -> ChatOpenAI:
         """Create a ChatOpenAI instance with the given temperature."""
-        api_key = self.settings.gemini_api_key.get_secret_value()
+        api_key = self.settings.gemini_analyze_api_key.get_secret_value()
         return ChatOpenAI(
-            base_url=self.settings.openai_base_url,
+            base_url=self.settings.analyze_openai_base_url,
             api_key=api_key,  # type: ignore[arg-type]
             model=self.settings.llm_model,
             temperature=temperature,

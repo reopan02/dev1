@@ -42,8 +42,8 @@ app.add_middleware(
 )
 
 # 初始化客户端
-gemini_client = GeminiClient()
 settings = get_settings()
+gemini_client = GeminiClient(settings)
 llm_manager = LLMManager(settings)
 
 # 加载提示词模板（全部在启动时加载）
