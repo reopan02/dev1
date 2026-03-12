@@ -92,7 +92,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
 
   const handleRecognize = async () => {
     if (!tabData.targetImage) {
-      setRecognizeError('请先上传目标产品图片');
+      setRecognizeError('请先上传目标角色图片');
       return;
     }
 
@@ -128,7 +128,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   const isGenerating = tabData.status === 'generating';
 
   return (
-    <GlassCard title="图片生成">
+    <GlassCard title="卡片生成">
       {/* 文生图模式开关 */}
       <div style={{
         display: 'flex',
@@ -178,7 +178,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
         </div>
       </div>
 
-      {/* 图片上传与产品识别（文生图模式下隐藏） */}
+      {/* 图片上传与角色识别（文生图模式下隐藏） */}
       {!textOnlyMode && (
         <>
           <ImageUpload onImageSelect={handleImageSelect} disabled={isGenerating} />
@@ -187,11 +187,11 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
         <ImagePreview
           image={targetImagePreview}
           loading={false}
-          placeholder="上传目标产品图片后显示"
+          placeholder="上传目标角色图片后显示"
         />
       </div>
 
-      {/* 产品信息识别按钮 */}
+      {/* 角色信息识别按钮 */}
       {tabData.targetImage && (
         <div style={{ marginTop: '12px' }}>
           <div style={{
@@ -199,7 +199,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
             color: 'var(--text-secondary)',
             marginBottom: '8px'
           }}>
-            识别产品信息到左侧输入框
+            识别角色信息到左侧输入框
           </div>
           <button
             className="glass-button"
@@ -213,7 +213,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
                 识别中...
               </>
             ) : (
-              '产品识别'
+              '角色识别'
             )}
           </button>
           {recognizeError && (
@@ -332,7 +332,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
           value={localPrompt}
           onChange={(e) => setLocalPrompt(e.target.value)}
           disabled={isGenerating}
-          placeholder="输入或粘贴生成提示词（也可从左侧分析竞品后获取）..."
+          placeholder="输入或粘贴生成提示词（也可从左侧分析参考卡片后获取）..."
           style={{
             width: '100%',
             minHeight: '120px',

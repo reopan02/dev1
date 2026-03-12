@@ -121,7 +121,7 @@ def test_api_schemas():
 def main():
     """运行所有测试"""
     print("=" * 60)
-    print("电商图片生成器 - 后端测试")
+    print("动漫卡片生成器 - 后端测试")
     print("=" * 60)
 
     tests = [

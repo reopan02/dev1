@@ -27,11 +27,10 @@ async def test_generate_image():
     test_image_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
 
     test_prompt = """
-产品居中放置，俯视角度拍摄。
-纯白背景，简洁专业。
-柔和自然光从左上方45度照射，右侧形成淡淡阴影，增强立体感。
-产品占画面中心约60%，四周适当留白，黄金分割比例。
-色彩鲜明，与白色背景形成对比，整体明亮清新。
+动漫角色居中放置，正面视角。
+深蓝渐变背景，带有魔法光晕特效。
+角色占卡面中心约70%，四周留有边框装饰空间。
+赛璐璐画风，线条清晰，色彩鲜明，整体奇幻风格。
     """.strip()
 
     try:

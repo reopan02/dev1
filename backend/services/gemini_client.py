@@ -8,7 +8,7 @@ from config import Settings
 
 
 class GeminiClient:
-    """Gemini API客户端 — 仅用于图片生成（通过Gemini原生API）
+    """Gemini API客户端 — 仅用于卡片图片生成（通过Gemini原生API）
 
     文本LLM调用已迁移至 LLMManager (services/llm_manager.py)。
     """
@@ -37,11 +37,11 @@ class GeminiClient:
         model: Optional[str] = None
     ) -> str:
         """
-        使用Gemini图片生成API
+        使用Gemini卡片图片生成API
 
         Args:
-            prompt: 构图提示词
-            reference_image_base64: Base64编码的参考图片（目标产品），
+            prompt: 卡面风格提示词
+            reference_image_base64: Base64编码的参考图片（目标角色），
                                     为空时使用文生图模式，否则使用图生图模式
             aspect_ratio: 宽高比，如 "1:1", "16:9", "9:16"
             image_size: 分辨率，如 "1K", "2K", "4K"

@@ -35,7 +35,7 @@ function App() {
           fontWeight: '700',
           color: 'var(--text-primary)'
         }}>
-          电商图片生成器
+          动漫卡片生成器
         </h1>
         <div style={{
           marginLeft: 'auto',
@@ -75,8 +75,8 @@ function App() {
             使用说明
           </h3>
           <ol style={{ fontSize: '14px', lineHeight: '1.8', color: 'var(--text-secondary)', paddingLeft: '20px' }}>
-            <li>在右侧输入生成提示词（可直接输入，或使用左侧竞品分析自动生成）</li>
-            <li>（可选）上传目标产品图片，或开启文生图模式</li>
+            <li>在右侧输入生成提示词（可直接输入，或使用左侧参考卡片分析自动生成）</li>
+            <li>（可选）上传目标角色图片，或开启文生图模式</li>
             <li>选择宽高比和分辨率，点击"生成图片"</li>
             <li>下载生成的图片，可多次迭代优化</li>
             <li>点击"+"按钮创建新标签，支持并发生成多个图片</li>

@@ -33,7 +33,7 @@ const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated, productInfo,
 
   const handleFuse = async () => {
     if (!localProductInfo.trim()) {
-      setError('请输入产品信息');
+      setError('请输入角色信息');
       return;
     }
 
@@ -75,14 +75,14 @@ const ProductInfoInput = ({ analysisResult, onFusedPromptGenerated, productInfo,
         textTransform: 'uppercase',
         letterSpacing: '0.5px'
       }}>
-        目标产品信息
+        目标角色信息
       </div>
       <textarea
         className="prompt-editor"
         value={localProductInfo}
         onChange={handleChange}
         disabled={loading}
-        placeholder="输入您的产品信息，如：产品名称、外观特征、核心卖点、目标人群等"
+        placeholder="输入角色信息，如：角色名称、外观特征、服装配饰、属性能力等"
         style={{ minHeight: '100px' }}
       />
 

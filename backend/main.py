@@ -27,8 +27,8 @@ load_dotenv()
 
 # 创建FastAPI应用
 app = FastAPI(
-    title="E-Commerce Image Generator API",
-    description="电商图片生成器 - 使用Gemini AI分析竞品并生成新图片",
+    title="Anime Card Generator API",
+    description="动漫角色卡片生成器 - 使用AI分析参考卡片并生成新卡片",
     version="1.0.0"
 )
 
@@ -51,19 +51,19 @@ try:
     reverse_prompt_template = load_reverse_prompt_template()
 except FileNotFoundError as e:
     print(f"警告: {e}")
-    reverse_prompt_template = "请分析这张图片的构图、光影、背景、风格等元素，生成一段可用于图片生成的提示词。"
+    reverse_prompt_template = "请分析这张动漫卡片的角色立绘、边框装饰、背景特效、文字排版等元素，生成一段可用于卡片图片生成的提示词。"
 
 try:
     fuse_prompt_template = load_fuse_prompt_template()
 except FileNotFoundError as e:
     print(f"警告: {e}")
-    fuse_prompt_template = "请将目标产品信息融入到竞品分析模板中，生成新的图片生成提示词。"
+    fuse_prompt_template = "请将目标角色信息融入到参考卡片风格模板中，生成新的卡片图片生成提示词。"
 
 try:
     recognize_template = load_recognize_product_template()
 except FileNotFoundError as e:
     print(f"警告: {e}")
-    recognize_template = "请识别图片中的产品信息，包括产品名称、类别、颜色、材质等特征。"
+    recognize_template = "请识别图片中的动漫角色信息，包括角色外观、服装配饰、画风风格等特征。"
 
 
 def _sse_chunk(content: str, done: bool = False) -> str:
@@ -79,15 +79,15 @@ def _sse_error(message: str) -> str:
 @app.get("/")
 async def root():
     """健康检查"""
-    return {"status": "ok", "message": "E-Commerce Image Generator API"}
+    return {"status": "ok", "message": "Anime Card Generator API"}
 
 
 @app.post("/api/analyze")
 async def analyze_competitor_image(request: AnalyzeRequest):
     """
-    分析竞品图片并生成构图提示词（SSE流式响应）
+    分析参考卡片并生成卡面风格提示词（SSE流式响应）
 
-    - **image**: Base64编码的竞品图片
+    - **image**: Base64编码的参考卡片图片
     """
     # 预流验证：返回400 JSON（非SSE）
     is_valid, error_msg = gemini_client.validate_image_base64(request.image)
@@ -104,7 +104,7 @@ async def analyze_competitor_image(request: AnalyzeRequest):
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": "请分析这张电商图片并生成构图提示词"},
+                        {"type": "text", "text": "请分析这张动漫卡片并生成卡面风格提示词"},
                         {
                             "type": "image_url",
                             "image_url": {"url": f"data:image/jpeg;base64,{request.image}"}
@@ -132,10 +132,10 @@ async def analyze_competitor_image(request: AnalyzeRequest):
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate_product_image(request: GenerateRequest):
     """
-    生成新的产品图片
+    生成新的卡片图片
 
-    - **target_image**: Base64编码的目标产品图片（可选，为空时使用文生图模式）
-    - **prompt**: 编辑后的构图提示词
+    - **target_image**: Base64编码的目标角色图片（可选，为空时使用文生图模式）
+    - **prompt**: 编辑后的卡面风格提示词
     - **aspect_ratio**: 图片宽高比（可选，默认1:1）
     - **image_size**: 图片分辨率（可选，默认1K）
     """
@@ -182,22 +182,22 @@ async def generate_product_image(request: GenerateRequest):
 @app.post("/api/fuse-prompt")
 async def fuse_prompt(request: FusePromptRequest):
     """
-    融合产品信息与竞品分析结果（SSE流式响应）
+    融合角色信息与参考卡片分析结果（SSE流式响应）
 
-    - **analysis_result**: 竞品分析得到的原始提示词
-    - **product_info**: 用户输入的目标产品信息
+    - **analysis_result**: 参考卡片分析得到的风格提示词
+    - **product_info**: 用户输入的目标角色信息
     """
     # 预流验证：返回400 JSON（非SSE）
     if not request.analysis_result or len(request.analysis_result.strip()) < 10:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="竞品分析结果过短"
+            detail="参考卡片分析结果过短"
         )
 
     if not request.product_info or len(request.product_info.strip()) < 2:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="请输入产品信息"
+            detail="请输入角色信息"
         )
 
     async def generate() -> AsyncGenerator[str, None]:
@@ -206,7 +206,7 @@ async def fuse_prompt(request: FusePromptRequest):
                 {"role": "system", "content": fuse_prompt_template},
                 {
                     "role": "user",
-                    "content": f"## 竞品分析模板\n\n{request.analysis_result}\n\n## 目标产品信息\n\n{request.product_info}"
+                    "content": f"## 参考卡片风格模板\n\n{request.analysis_result}\n\n## 目标角色信息\n\n{request.product_info}"
                 }
             ]
             async for chunk in llm_manager.stream_chat(messages):
@@ -229,9 +229,9 @@ async def fuse_prompt(request: FusePromptRequest):
 @app.post("/api/recognize-product")
 async def recognize_product(request: RecognizeProductRequest):
     """
-    识别产品图片中的产品信息（SSE流式响应）
+    识别动漫角色图片中的角色信息（SSE流式响应）
 
-    - **image**: Base64编码的产品图片
+    - **image**: Base64编码的动漫角色图片
     """
     # 预流验证：返回400 JSON（非SSE）
     is_valid, error_msg = gemini_client.validate_image_base64(request.image)
@@ -248,7 +248,7 @@ async def recognize_product(request: RecognizeProductRequest):
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": "请识别这张图片中的产品信息"},
+                        {"type": "text", "text": "请识别这张图片中的动漫角色信息"},
                         {
                             "type": "image_url",
                             "image_url": {"url": f"data:image/jpeg;base64,{request.image}"}
@@ -262,7 +262,7 @@ async def recognize_product(request: RecognizeProductRequest):
             yield _sse_chunk("", done=True)
         except Exception as e:
             traceback.print_exc()
-            yield _sse_error(f"产品识别失败: {str(e)}")
+            yield _sse_error(f"角色识别失败: {str(e)}")
 
     return StreamingResponse(
         generate(),
