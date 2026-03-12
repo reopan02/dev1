@@ -3,14 +3,8 @@
 > vite
 
 
-  VITE v5.4.21  ready in 1021 ms
+  VITE v5.4.21  ready in 1062 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: http://10.255.255.254:5173/
   ➜  Network: http://172.26.141.139:5173/
-9:24:01 PM [vite] http proxy error: /api/analyze
-Error: connect ECONNREFUSED 127.0.0.1:8000
-    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1549:16)
-9:24:07 PM [vite] http proxy error: /api/analyze
-Error: connect ECONNREFUSED 127.0.0.1:8000
-    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1549:16)
