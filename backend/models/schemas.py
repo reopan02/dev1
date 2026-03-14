@@ -22,7 +22,10 @@ class GenerateRequest(BaseModel):
     prompt: str = Field(..., description="编辑后的卡面风格提示词")
     aspect_ratio: Optional[str] = Field(default="1:1", description="图片宽高比")
     image_size: Optional[str] = Field(default="1K", description="图片分辨率: 1K, 2K, 4K")
-    model: Optional[str] = Field(default="gemini-3-pro-image-preview", description="图片生成模型")
+    model: Optional[str] = Field(
+        default="gemini-3-pro-image-preview",
+        description="图片生成模型: gemini-3-pro-image-preview, gemini-3.1-flash-image-preview, seedream-v4, seedream-v4.5, seedream-v5-lite"
+    )
 
 
 class GenerateResponse(BaseModel):

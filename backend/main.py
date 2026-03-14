@@ -19,6 +19,7 @@ from models.schemas import (
 )
 from services.gemini_client import GeminiClient
 from services.llm_manager import LLMManager
+from services.runninghub_client import RunningHubClient, is_runninghub_model
 from services.prompt_loader import load_reverse_prompt_template, load_fuse_prompt_template, load_recognize_product_template
 from config import get_settings
 
@@ -45,6 +46,7 @@ app.add_middleware(
 settings = get_settings()
 gemini_client = GeminiClient(settings)
 llm_manager = LLMManager(settings)
+runninghub_client = RunningHubClient(settings)
 
 # 加载提示词模板（全部在启动时加载）
 try:
@@ -145,7 +147,7 @@ async def generate_product_image(request: GenerateRequest):
 
         # 图生图模式时验证图片
         if not is_text_to_image:
-            is_valid, error_msg = gemini_client.validate_image_base64(request.target_image)
+            is_valid, error_msg = gemini_client.validate_image_base64(request.target_image or "")
             if not is_valid:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -159,14 +161,27 @@ async def generate_product_image(request: GenerateRequest):
                 detail="提示词不能为空"
             )
 
-        # 调用Gemini生成图片
-        generated_image = await gemini_client.generate_image(
-            prompt=request.prompt,
-            reference_image_base64=request.target_image if not is_text_to_image else None,
-            aspect_ratio=request.aspect_ratio,
-            image_size=request.image_size,
-            model=request.model
-        )
+        effective_model = request.model or "gemini-3-pro-image-preview"
+
+        # 根据模型类型分发到不同的客户端
+        if is_runninghub_model(effective_model):
+            # RunningHub Seedream 系列
+            generated_image = await runninghub_client.generate_image(
+                prompt=request.prompt,
+                model=effective_model,
+                reference_image_base64=request.target_image if not is_text_to_image else None,
+                aspect_ratio=request.aspect_ratio or "1:1",
+                image_size=request.image_size or "2K",
+            )
+        else:
+            # Gemini 原生 API
+            generated_image = await gemini_client.generate_image(
+                prompt=request.prompt,
+                reference_image_base64=request.target_image if not is_text_to_image else None,
+                aspect_ratio=request.aspect_ratio or "1:1",
+                image_size=request.image_size or "1K",
+                model=effective_model,
+            )
 
         return GenerateResponse(generated_image=generated_image)
 

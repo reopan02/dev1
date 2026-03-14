@@ -260,8 +260,15 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
               fontSize: '13px'
             }}
           >
-            <option value="gemini-3-pro-image-preview">Gemini 3 Pro</option>
-            <option value="gemini-3.1-flash-image-preview">Gemini 3.1 Flash</option>
+            <optgroup label="Gemini (Nano Banana)">
+              <option value="gemini-3-pro-image-preview">Nano Banana Pro</option>
+              <option value="gemini-3.1-flash-image-preview">Nano Banana V2</option>
+            </optgroup>
+            <optgroup label="Seedream (字节跳动)">
+              <option value="seedream-v4">Seedream v4</option>
+              <option value="seedream-v4.5">Seedream v4.5</option>
+              <option value="seedream-v5-lite">Seedream v5 Lite</option>
+            </optgroup>
           </select>
         </div>
         <div>

@@ -35,6 +35,16 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("image_model", "GEMINI_IMAGE_MODEL", "gemini_image_model")
     )
 
+    # RunningHub API config (for Seedream models)
+    runninghub_api_key: SecretStr = Field(
+        default=SecretStr(""),
+        validation_alias=AliasChoices("runninghub_api_key", "RUNNINGHUB_API_KEY")
+    )
+    runninghub_base_url: str = Field(
+        default="https://www.runninghub.cn",
+        validation_alias=AliasChoices("runninghub_base_url", "RUNNINGHUB_BASE_URL")
+    )
+
     # Temperature config
     llm_temperature: float = 0.7
     llm_recognize_temperature: float = 0.3
