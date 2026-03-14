@@ -1,4 +1,5 @@
 import json
+import importlib
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -7,24 +8,25 @@ from dotenv import load_dotenv
 import os
 import traceback
 from pathlib import Path
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Optional
 
 from models.schemas import (
     AnalyzeRequest,
     GenerateRequest,
     GenerateResponse,
-    ErrorResponse,
     FusePromptRequest,
     RecognizeProductRequest,
 )
-from services.gemini_client import GeminiClient
 from services.llm_manager import LLMManager
-from services.runninghub_client import RunningHubClient, is_runninghub_model
+from services.runninghub_client import RunningHubClient
+from services.image_utils import validate_image_base64
 from services.prompt_loader import load_reverse_prompt_template, load_fuse_prompt_template, load_recognize_product_template
-from config import get_settings
+_config_module = importlib.import_module("config")
+get_settings = _config_module.get_settings
 
 # 加载环境变量
-load_dotenv()
+_ = load_dotenv()
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -42,11 +44,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 初始化客户端
+# 初始化配置与懒加载客户端
 settings = get_settings()
-gemini_client = GeminiClient(settings)
-llm_manager = LLMManager(settings)
-runninghub_client = RunningHubClient(settings)
+llm_manager: Optional[LLMManager] = None
+runninghub_client: Optional[RunningHubClient] = None
+
+
+def get_llm_manager() -> LLMManager:
+    global llm_manager
+    if llm_manager is None:
+        llm_manager = LLMManager(settings)
+    return llm_manager
+
+
+def get_runninghub_client() -> RunningHubClient:
+    global runninghub_client
+    if runninghub_client is None:
+        runninghub_client = RunningHubClient(settings)
+    return runninghub_client
 
 # 加载提示词模板（全部在启动时加载）
 try:
@@ -92,7 +107,8 @@ async def analyze_competitor_image(request: AnalyzeRequest):
     - **image**: Base64编码的参考卡片图片
     """
     # 预流验证：返回400 JSON（非SSE）
-    is_valid, error_msg = gemini_client.validate_image_base64(request.image)
+    llm = get_llm_manager()
+    is_valid, error_msg = validate_image_base64(request.image)
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -114,7 +130,7 @@ async def analyze_competitor_image(request: AnalyzeRequest):
                     ]
                 }
             ]
-            async for chunk in llm_manager.stream_chat(messages):
+            async for chunk in llm.stream_chat(messages):
                 yield _sse_chunk(chunk)
             yield _sse_chunk("", done=True)
         except Exception as e:
@@ -136,23 +152,28 @@ async def generate_product_image(request: GenerateRequest):
     """
     生成新的卡片图片
 
-    - **target_image**: Base64编码的目标角色图片（可选，为空时使用文生图模式）
+    - **target_images**: Base64编码的目标角色图片列表（可选，为空时使用文生图模式）
     - **prompt**: 编辑后的卡面风格提示词
     - **aspect_ratio**: 图片宽高比（可选，默认1:1）
-    - **image_size**: 图片分辨率（可选，默认1K）
+    - **image_size**: 图片分辨率（可选，默认2K）
     """
     try:
-        # 判断生成模式
-        is_text_to_image = not request.target_image or request.target_image.strip() == ""
+        runninghub = get_runninghub_client()
 
-        # 图生图模式时验证图片
-        if not is_text_to_image:
-            is_valid, error_msg = gemini_client.validate_image_base64(request.target_image or "")
-            if not is_valid:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=error_msg
-                )
+        # 判断生成模式：有有效图片则为图生图
+        has_images = bool(request.target_images and any(img.strip() for img in request.target_images))
+
+        # 图生图模式时验证每张图片
+        if has_images:
+            for i, img in enumerate(request.target_images or []):
+                if not img.strip():
+                    continue
+                is_valid, error_msg = validate_image_base64(img)
+                if not is_valid:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"第{i+1}张图片验证失败: {error_msg}"
+                    )
 
         # 验证提示词
         if not request.prompt or len(request.prompt.strip()) == 0:
@@ -161,29 +182,20 @@ async def generate_product_image(request: GenerateRequest):
                 detail="提示词不能为空"
             )
 
-        effective_model = request.model or "gemini-3-pro-image-preview"
+        effective_model = request.model or "nano-banana-v2"
 
-        # 根据模型类型分发到不同的客户端
-        if is_runninghub_model(effective_model):
-            # RunningHub Seedream 系列
-            generated_image = await runninghub_client.generate_image(
-                prompt=request.prompt,
-                model=effective_model,
-                reference_image_base64=request.target_image if not is_text_to_image else None,
-                aspect_ratio=request.aspect_ratio or "1:1",
-                image_size=request.image_size or "2K",
-            )
-        else:
-            # Gemini 原生 API
-            generated_image = await gemini_client.generate_image(
-                prompt=request.prompt,
-                reference_image_base64=request.target_image if not is_text_to_image else None,
-                aspect_ratio=request.aspect_ratio or "1:1",
-                image_size=request.image_size or "1K",
-                model=effective_model,
-            )
+        # 过滤空字符串
+        valid_images = [img for img in (request.target_images or []) if img.strip()] if has_images else None
 
-        return GenerateResponse(generated_image=generated_image)
+        image_url = await runninghub.generate_image(
+            prompt=request.prompt,
+            model=effective_model,
+            reference_images=valid_images,
+            aspect_ratio=request.aspect_ratio or "1:1",
+            image_size=request.image_size or "2K",
+        )
+
+        return GenerateResponse(image_url=image_url)
 
     except HTTPException:
         raise
@@ -215,6 +227,8 @@ async def fuse_prompt(request: FusePromptRequest):
             detail="请输入角色信息"
         )
 
+    llm = get_llm_manager()
+
     async def generate() -> AsyncGenerator[str, None]:
         try:
             messages = [
@@ -224,7 +238,7 @@ async def fuse_prompt(request: FusePromptRequest):
                     "content": f"## 参考卡片风格模板\n\n{request.analysis_result}\n\n## 目标角色信息\n\n{request.product_info}"
                 }
             ]
-            async for chunk in llm_manager.stream_chat(messages):
+            async for chunk in llm.stream_chat(messages):
                 yield _sse_chunk(chunk)
             yield _sse_chunk("", done=True)
         except Exception as e:
@@ -249,7 +263,8 @@ async def recognize_product(request: RecognizeProductRequest):
     - **image**: Base64编码的动漫角色图片
     """
     # 预流验证：返回400 JSON（非SSE）
-    is_valid, error_msg = gemini_client.validate_image_base64(request.image)
+    llm = get_llm_manager()
+    is_valid, error_msg = validate_image_base64(request.image)
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -272,7 +287,7 @@ async def recognize_product(request: RecognizeProductRequest):
                 }
             ]
             # recognize uses temperature=0.3 (lower for more factual output)
-            async for chunk in llm_manager.stream_chat(messages, temperature=settings.llm_recognize_temperature):
+            async for chunk in llm.stream_chat(messages, temperature=settings.llm_recognize_temperature):
                 yield _sse_chunk(chunk)
             yield _sse_chunk("", done=True)
         except Exception as e:

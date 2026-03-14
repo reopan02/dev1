@@ -3,10 +3,10 @@ import GlassCard from '../components/GlassCard';
 import ImageUpload from '../components/ImageUpload';
 import ImagePreview from '../components/ImagePreview';
 import PromptEditor from '../components/PromptEditor';
-import { fileToBase64, generateImage, downloadBase64Image, recognizeProductStream } from '../services/api';
+import { fileToBase64, generateImage, downloadImageFromUrl, recognizeProductStream } from '../services/api';
 
 const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized }) => {
-  const [targetImagePreview, setTargetImagePreview] = useState(null);
+  const [targetImagePreviews, setTargetImagePreviews] = useState([]);
   const [localPrompt, setLocalPrompt] = useState(tabData.prompt || '');
   const [recognizing, setRecognizing] = useState(false);
   const [recognizeError, setRecognizeError] = useState(null);
@@ -19,6 +19,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      targetImagePreviews.forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
 
@@ -33,21 +34,46 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   const handleImageSelect = async (file) => {
     try {
       onUpdateTab({ error: null });
-      // 释放旧的预览 URL
-      if (targetImagePreview) {
-        URL.revokeObjectURL(targetImagePreview);
-      }
-      // 显示预览
       const previewUrl = URL.createObjectURL(file);
-      setTargetImagePreview(previewUrl);
-
-      // 转换为Base64
       const base64 = await fileToBase64(file);
-      onUpdateTab({ targetImage: base64 });
+
+      const newPreviews = [...targetImagePreviews, previewUrl];
+      const newImages = [...(tabData.targetImages || []), base64];
+      setTargetImagePreviews(newPreviews);
+      onUpdateTab({ targetImages: newImages });
     } catch (err) {
       onUpdateTab({ error: '图片加载失败' });
       console.error(err);
     }
+  };
+
+  const handleMultipleImageSelect = async (files) => {
+    try {
+      onUpdateTab({ error: null });
+      const newPreviews = [];
+      const newBase64s = [];
+      for (const file of files) {
+        newPreviews.push(URL.createObjectURL(file));
+        newBase64s.push(await fileToBase64(file));
+      }
+      const allPreviews = [...targetImagePreviews, ...newPreviews];
+      const allImages = [...(tabData.targetImages || []), ...newBase64s];
+      setTargetImagePreviews(allPreviews);
+      onUpdateTab({ targetImages: allImages });
+    } catch (err) {
+      onUpdateTab({ error: '图片加载失败' });
+      console.error(err);
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    const preview = targetImagePreviews[index];
+    if (preview) URL.revokeObjectURL(preview);
+
+    const newPreviews = targetImagePreviews.filter((_, i) => i !== index);
+    const newImages = (tabData.targetImages || []).filter((_, i) => i !== index);
+    setTargetImagePreviews(newPreviews);
+    onUpdateTab({ targetImages: newImages.length > 0 ? newImages : null });
   };
 
   const handleGenerate = async () => {
@@ -64,14 +90,14 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
 
     try {
       const result = await generateImage(
-        textOnlyMode ? null : tabData.targetImage,
+        textOnlyMode ? null : tabData.targetImages,
         localPrompt,
         tabData.aspectRatio,
         tabData.imageSize,
         tabData.model
       );
       onUpdateTab({
-        generatedImage: result.generated_image,
+        generatedImage: result.image_url,
         status: 'complete'
       });
     } catch (err) {
@@ -86,12 +112,13 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   const handleDownload = () => {
     if (tabData.generatedImage) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      downloadBase64Image(tabData.generatedImage, `generated-${timestamp}.png`);
+      downloadImageFromUrl(tabData.generatedImage, `generated-${timestamp}.png`);
     }
   };
 
   const handleRecognize = async () => {
-    if (!tabData.targetImage) {
+    const firstImage = tabData.targetImages?.[0];
+    if (!firstImage) {
       setRecognizeError('请先上传目标角色图片');
       return;
     }
@@ -107,7 +134,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
 
     let accumulated = '';
     await recognizeProductStream(
-      tabData.targetImage,
+      firstImage,
       (chunk) => {
         accumulated += chunk;
       },
@@ -181,18 +208,65 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
       {/* 图片上传与角色识别（文生图模式下隐藏） */}
       {!textOnlyMode && (
         <>
-          <ImageUpload onImageSelect={handleImageSelect} disabled={isGenerating} />
+          <ImageUpload
+            onImageSelect={handleImageSelect}
+            onMultipleImageSelect={handleMultipleImageSelect}
+            disabled={isGenerating}
+            multiple={true}
+          />
 
-      <div style={{ marginTop: '16px' }}>
-        <ImagePreview
-          image={targetImagePreview}
-          loading={false}
-          placeholder="上传目标角色图片后显示"
-        />
-      </div>
+      {/* 多图预览 */}
+      {targetImagePreviews.length > 0 && (
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '8px',
+          marginTop: '16px'
+        }}>
+          {targetImagePreviews.map((preview, index) => (
+            <div key={index} style={{ position: 'relative', width: '80px', height: '80px' }}>
+              <img
+                src={preview}
+                alt={`目标图片 ${index + 1}`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-subtle)'
+                }}
+              />
+              {!isGenerating && (
+                <button
+                  onClick={() => handleRemoveImage(index)}
+                  style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    background: 'rgba(239, 68, 68, 0.9)',
+                    color: 'white',
+                    border: 'none',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: 1
+                  }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* 角色信息识别按钮 */}
-      {tabData.targetImage && (
+      {tabData.targetImages && tabData.targetImages.length > 0 && (
         <div style={{ marginTop: '12px' }}>
           <div style={{
             fontSize: '12px',
@@ -247,7 +321,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
             生成模型
           </label>
           <select
-            value={tabData.model || 'gemini-3-pro-image-preview'}
+            value={tabData.model || 'nano-banana-v2'}
             onChange={(e) => onUpdateTab({ model: e.target.value })}
             disabled={isGenerating}
             style={{
@@ -260,9 +334,9 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
               fontSize: '13px'
             }}
           >
-            <optgroup label="Gemini (Nano Banana)">
-              <option value="gemini-3-pro-image-preview">Nano Banana Pro</option>
-              <option value="gemini-3.1-flash-image-preview">Nano Banana V2</option>
+            <optgroup label="Nano Banana (Google)">
+              <option value="nano-banana-v2">Nano Banana V2</option>
+              <option value="nano-banana-pro">Nano Banana Pro</option>
             </optgroup>
             <optgroup label="Seedream (字节跳动)">
               <option value="seedream-v4">Seedream v4</option>
@@ -342,7 +416,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
           placeholder="输入或粘贴生成提示词（也可从左侧分析参考卡片后获取）..."
           style={{
             width: '100%',
-            minHeight: '120px',
+            minHeight: '250px',
             padding: '12px',
             background: 'rgba(255, 255, 255, 0.5)',
             border: '1px solid var(--border-subtle)',
@@ -396,7 +470,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
 
       <div style={{ marginTop: '16px' }}>
         <ImagePreview
-          image={tabData.generatedImage ? `data:image/png;base64,${tabData.generatedImage}` : null}
+          image={tabData.generatedImage || null}
           loading={isGenerating}
           placeholder="生成结果将显示在这里"
         />

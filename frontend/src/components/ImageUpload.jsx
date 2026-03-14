@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { validateImage, processImage } from '../utils/imageProcessor';
 
-const ImageUpload = ({ onImageSelect, disabled = false }) => {
+const ImageUpload = ({ onImageSelect, onMultipleImageSelect, disabled = false, multiple = false }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -50,15 +50,23 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
     if (disabled) return;
 
     const files = e.dataTransfer.files;
-    if (files && files[0]) {
-      handleFile(files[0]);
+    if (files && files.length > 0) {
+      if (multiple && files.length > 1) {
+        handleMultipleFiles(Array.from(files));
+      } else {
+        handleFile(files[0]);
+      }
     }
   };
 
   const handleFileInput = (e) => {
     const files = e.target.files;
-    if (files && files[0]) {
-      handleFile(files[0]);
+    if (files && files.length > 0) {
+      if (multiple && files.length > 1) {
+        handleMultipleFiles(Array.from(files));
+      } else {
+        handleFile(files[0]);
+      }
     }
     // 重置 input 值，确保再次选择同一文件时也能触发 onChange
     e.target.value = '';
@@ -75,6 +83,35 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
       setIsProcessing(true);
       const processedFile = await processImage(file);
       onImageSelect(processedFile);
+    } catch (error) {
+      console.error('Image processing error:', error);
+      alert(error.message || '图片处理失败');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleMultipleFiles = async (files) => {
+    const validFiles = [];
+    for (const file of files) {
+      const validation = validateImage(file);
+      if (validation.valid) {
+        validFiles.push(file);
+      }
+    }
+    if (validFiles.length === 0) {
+      alert('没有有效的图片文件');
+      return;
+    }
+    try {
+      setIsProcessing(true);
+      const processedFiles = await Promise.all(validFiles.map(f => processImage(f)));
+      if (onMultipleImageSelect) {
+        onMultipleImageSelect(processedFiles);
+      } else {
+        // fallback: 逐个回调
+        processedFiles.forEach(f => onImageSelect(f));
+      }
     } catch (error) {
       console.error('Image processing error:', error);
       alert(error.message || '图片处理失败');
@@ -123,6 +160,7 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        multiple={multiple}
         onChange={handleFileInput}
         style={{ display: 'none' }}
         disabled={disabled}
@@ -155,7 +193,7 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
       )}
 
       <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-        支持 JPG, PNG · 最大 10MB
+        支持 JPG, PNG · 最大 10MB{multiple ? ' · 可选择多张' : ''}
       </div>
     </div>
   );

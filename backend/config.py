@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     # Analyze model config
     gemini_analyze_api_key: SecretStr = Field(
+        default=SecretStr(""),
         validation_alias=AliasChoices("gemini_analyze_api_key", "GEMINI_ANALYZE_API_KEY")
     )
     gemini_analyze_base_url: str = Field(
@@ -22,20 +23,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("llm_model", "GEMINI_ANALYZE_MODEL", "gemini_analyze_model")
     )
 
-    # Image model config
-    gemini_image_api_key: SecretStr = Field(
-        validation_alias=AliasChoices("gemini_image_api_key", "GEMINI_IMAGE_API_KEY")
-    )
-    gemini_image_base_url: str = Field(
-        default="https://yunwu.ai",
-        validation_alias=AliasChoices("gemini_image_base_url", "GEMINI_IMAGE_BASE_URL")
-    )
-    image_model: str = Field(
-        default="gemini-3-pro-image-preview",
-        validation_alias=AliasChoices("image_model", "GEMINI_IMAGE_MODEL", "gemini_image_model")
-    )
-
-    # RunningHub API config (for Seedream models)
+    # RunningHub API config (image generation — Nano Banana + Seedream)
     runninghub_api_key: SecretStr = Field(
         default=SecretStr(""),
         validation_alias=AliasChoices("runninghub_api_key", "RUNNINGHUB_API_KEY")

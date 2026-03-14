@@ -45,14 +45,14 @@ export const analyzeImage = async (imageBase64) => {
 /**
  * 生成卡片图片
  */
-export const generateImage = async (targetImageBase64, prompt, aspectRatio = '3:4', imageSize = '2K', model = 'gemini-3-pro-image-preview') => {
+export const generateImage = async (targetImages, prompt, aspectRatio = '3:4', imageSize = '2K', model = 'nano-banana-v2') => {
   const response = await fetch(`${API_BASE_URL}/generate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      target_image: targetImageBase64,
+      target_images: targetImages,
       prompt: prompt,
       aspect_ratio: aspectRatio,
       image_size: imageSize,
@@ -100,7 +100,7 @@ export const fusePrompt = async (analysisResult, productInfo) => {
 };
 
 /**
- * 下载Base64图片
+ * 下载Base64图片（保留向后兼容）
  */
 export const downloadBase64Image = (base64Data, filename = 'generated-image.png') => {
   const link = document.createElement('a');
@@ -109,6 +109,27 @@ export const downloadBase64Image = (base64Data, filename = 'generated-image.png'
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+};
+
+/**
+ * 从URL下载图片
+ */
+export const downloadImageFromUrl = async (imageUrl, filename = 'generated-image.png') => {
+  try {
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    // Fallback: open in new tab if CORS blocks fetch
+    window.open(imageUrl, '_blank');
+  }
 };
 
 /**

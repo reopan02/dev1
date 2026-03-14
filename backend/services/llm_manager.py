@@ -28,6 +28,8 @@ class LLMManager:
     def __init__(self, settings: Settings):
         self.settings = settings
         api_key = settings.gemini_analyze_api_key.get_secret_value()
+        if not api_key:
+            raise ValueError("GEMINI_ANALYZE_API_KEY环境变量未设置")
         self.model = ChatOpenAI(
             base_url=settings.analyze_openai_base_url,
             api_key=api_key,  # type: ignore[arg-type]

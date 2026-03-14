@@ -7,11 +7,11 @@ function GenerationTabContainer({ prompt, onProductInfoRecognized }) {
     {
       id: 'tab-1',
       label: 'Generation 1',
-      targetImage: null,
+      targetImages: null,
       prompt: '',
       aspectRatio: '3:4',
       imageSize: '2K',
-      model: 'gemini-3-pro-image-preview',
+      model: 'nano-banana-v2',
       generatedImage: null,
       status: 'idle',
       error: null
@@ -28,11 +28,11 @@ function GenerationTabContainer({ prompt, onProductInfoRecognized }) {
     const newTab = {
       id: `tab-${Date.now()}`,
       label: `Generation ${newTabNumber}`,
-      targetImage: null,
+      targetImages: null,
       prompt: prompt || '',
       aspectRatio: '3:4',
       imageSize: '2K',
-      model: 'gemini-3-pro-image-preview',
+      model: 'nano-banana-v2',
       generatedImage: null,
       status: 'idle',
       error: null
