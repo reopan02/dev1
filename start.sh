@@ -38,7 +38,7 @@ fi
 
 (
   cd "$ROOT_DIR/backend"
-  nohup python main.py >"$BACKEND_LOG_FILE" 2>&1 &
+  nohup python3 main.py >"$BACKEND_LOG_FILE" 2>&1 &
   echo $! >"$BACKEND_PID_FILE"
 )
 

@@ -31,10 +31,10 @@ YUNWU_BASE_URL=https://yunwu.zeabur.app/v1
 **后端：**
 ```bash
 cd backend
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python main.py
+python3 main.py
 ```
 
 **前端：**
