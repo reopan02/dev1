@@ -1,6 +1,20 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 /**
+ * 从 localStorage 读取用户配置的 API 密钥，构建自定义请求头
+ */
+const getApiKeyHeaders = () => {
+  const headers = {};
+  const geminiKey = localStorage.getItem('gemini_api_key');
+  const geminiModel = localStorage.getItem('gemini_model');
+  const runninghubKey = localStorage.getItem('runninghub_api_key');
+  if (geminiKey) headers['X-Gemini-Api-Key'] = geminiKey;
+  if (geminiModel) headers['X-Gemini-Model'] = geminiModel;
+  if (runninghubKey) headers['X-Runninghub-Api-Key'] = runninghubKey;
+  return headers;
+};
+
+/**
  * 将文件转换为Base64
  */
 export const fileToBase64 = (file) => {
@@ -24,6 +38,7 @@ export const analyzeImage = async (imageBase64) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getApiKeyHeaders(),
     },
     body: JSON.stringify({
       image: imageBase64,
@@ -50,6 +65,7 @@ export const generateImage = async (targetImages, prompt, aspectRatio = '3:4', i
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getApiKeyHeaders(),
     },
     body: JSON.stringify({
       target_images: targetImages,
@@ -80,6 +96,7 @@ export const fusePrompt = async (analysisResult, productInfo) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getApiKeyHeaders(),
     },
     body: JSON.stringify({
       analysis_result: analysisResult,
@@ -141,6 +158,7 @@ export const recognizeProduct = async (imageBase64) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getApiKeyHeaders(),
     },
     body: JSON.stringify({
       image: imageBase64,
@@ -173,7 +191,7 @@ export const streamPost = async (url, body, onChunk, onDone, onError, signal) =>
   try {
     response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getApiKeyHeaders() },
       body: JSON.stringify(body),
       signal,
     });

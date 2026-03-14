@@ -11,6 +11,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   const [recognizing, setRecognizing] = useState(false);
   const [recognizeError, setRecognizeError] = useState(null);
   const [textOnlyMode, setTextOnlyMode] = useState(false);
+  const [enlargedImage, setEnlargedImage] = useState(null);
   const abortControllerRef = useRef(null);
 
   // Cleanup on unmount
@@ -22,6 +23,20 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
       targetImagePreviews.forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
+
+  // ESC to close enlarged image
+  useEffect(() => {
+    if (!enlargedImage) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setEnlargedImage(null);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [enlargedImage]);
 
   // Update local prompt when external prompt changes (fused prompt generated)
   useEffect(() => {
@@ -228,13 +243,16 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
               <img
                 src={preview}
                 alt={`目标图片 ${index + 1}`}
+                onClick={() => setEnlargedImage(preview)}
                 style={{
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
                   borderRadius: '8px',
-                  border: '1px solid var(--border-subtle)'
+                  border: '1px solid var(--border-subtle)',
+                  cursor: 'pointer'
                 }}
+                title="点击放大预览"
               />
               {!isGenerating && (
                 <button
@@ -484,6 +502,18 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
         >
           📥 下载图片
         </button>
+      )}
+
+      {/* Enlarged image modal for uploaded thumbnails */}
+      {enlargedImage && (
+        <div className="image-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setEnlargedImage(null); }}>
+          <div className="image-modal-content">
+            <button className="image-modal-close" onClick={() => setEnlargedImage(null)}>
+              ✕
+            </button>
+            <img src={enlargedImage} alt="放大预览" className="image-modal-image" />
+          </div>
+        </div>
       )}
     </GlassCard>
   );

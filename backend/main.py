@@ -1,6 +1,6 @@
 import json
 import importlib
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
@@ -63,6 +63,34 @@ def get_runninghub_client() -> RunningHubClient:
         runninghub_client = RunningHubClient(settings)
     return runninghub_client
 
+
+def _resolve_llm(request: Request) -> LLMManager:
+    """Return a per-request LLMManager when the caller supplies an API key header,
+    otherwise fall back to the global singleton."""
+    api_key = request.headers.get("x-gemini-api-key")
+    if not api_key:
+        return get_llm_manager()
+    model = request.headers.get("x-gemini-model") or settings.llm_model
+    from pydantic import SecretStr as _SecretStr
+    per_req_settings = settings.model_copy(update={
+        "gemini_analyze_api_key": _SecretStr(api_key),
+        "llm_model": model,
+    })
+    return LLMManager(per_req_settings)
+
+
+def _resolve_runninghub(request: Request) -> RunningHubClient:
+    """Return a per-request RunningHubClient when the caller supplies an API key header,
+    otherwise fall back to the global singleton."""
+    api_key = request.headers.get("x-runninghub-api-key")
+    if not api_key:
+        return get_runninghub_client()
+    from pydantic import SecretStr as _SecretStr
+    per_req_settings = settings.model_copy(update={
+        "runninghub_api_key": _SecretStr(api_key),
+    })
+    return RunningHubClient(per_req_settings)
+
 # 加载提示词模板（全部在启动时加载）
 try:
     reverse_prompt_template = load_reverse_prompt_template()
@@ -100,14 +128,14 @@ async def root():
 
 
 @app.post("/api/analyze")
-async def analyze_competitor_image(request: AnalyzeRequest):
+async def analyze_competitor_image(request: AnalyzeRequest, raw_request: Request):
     """
     分析参考卡片并生成卡面风格提示词（SSE流式响应）
 
     - **image**: Base64编码的参考卡片图片
     """
     # 预流验证：返回400 JSON（非SSE）
-    llm = get_llm_manager()
+    llm = _resolve_llm(raw_request)
     is_valid, error_msg = validate_image_base64(request.image)
     if not is_valid:
         raise HTTPException(
@@ -148,7 +176,7 @@ async def analyze_competitor_image(request: AnalyzeRequest):
 
 
 @app.post("/api/generate", response_model=GenerateResponse)
-async def generate_product_image(request: GenerateRequest):
+async def generate_product_image(request: GenerateRequest, raw_request: Request):
     """
     生成新的卡片图片
 
@@ -158,7 +186,7 @@ async def generate_product_image(request: GenerateRequest):
     - **image_size**: 图片分辨率（可选，默认2K）
     """
     try:
-        runninghub = get_runninghub_client()
+        runninghub = _resolve_runninghub(raw_request)
 
         # 判断生成模式：有有效图片则为图生图
         has_images = bool(request.target_images and any(img.strip() for img in request.target_images))
@@ -207,7 +235,7 @@ async def generate_product_image(request: GenerateRequest):
 
 
 @app.post("/api/fuse-prompt")
-async def fuse_prompt(request: FusePromptRequest):
+async def fuse_prompt(request: FusePromptRequest, raw_request: Request):
     """
     融合角色信息与参考卡片分析结果（SSE流式响应）
 
@@ -227,7 +255,7 @@ async def fuse_prompt(request: FusePromptRequest):
             detail="请输入角色信息"
         )
 
-    llm = get_llm_manager()
+    llm = _resolve_llm(raw_request)
 
     async def generate() -> AsyncGenerator[str, None]:
         try:
@@ -256,14 +284,14 @@ async def fuse_prompt(request: FusePromptRequest):
 
 
 @app.post("/api/recognize-product")
-async def recognize_product(request: RecognizeProductRequest):
+async def recognize_product(request: RecognizeProductRequest, raw_request: Request):
     """
     识别动漫角色图片中的角色信息（SSE流式响应）
 
     - **image**: Base64编码的动漫角色图片
     """
     # 预流验证：返回400 JSON（非SSE）
-    llm = get_llm_manager()
+    llm = _resolve_llm(raw_request)
     is_valid, error_msg = validate_image_base64(request.image)
     if not is_valid:
         raise HTTPException(
