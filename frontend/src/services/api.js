@@ -31,7 +31,7 @@ export const fileToBase64 = (file) => {
 };
 
 /**
- * 分析参考卡片
+ * 分析竞品详情页图片
  */
 export const analyzeImage = async (imageBase64) => {
   const response = await fetch(`${API_BASE_URL}/analyze`, {
@@ -58,7 +58,7 @@ export const analyzeImage = async (imageBase64) => {
 };
 
 /**
- * 生成卡片图片
+ * 生成产品图片
  */
 export const generateImage = async (targetImages, prompt, aspectRatio = '3:4', imageSize = '2K', model = 'nano-banana-v2') => {
   const response = await fetch(`${API_BASE_URL}/generate`, {
@@ -89,7 +89,7 @@ export const generateImage = async (targetImages, prompt, aspectRatio = '3:4', i
 };
 
 /**
- * 融合角色信息与参考卡片分析结果
+ * 融合产品信息与竞品分析结果
  */
 export const fusePrompt = async (analysisResult, productInfo) => {
   const response = await fetch(`${API_BASE_URL}/fuse-prompt`, {
@@ -150,8 +150,8 @@ export const downloadImageFromUrl = async (imageUrl, filename = 'generated-image
 };
 
 /**
- * 识别角色信息
- * @param {string} imageBase64 - Base64编码的角色图片
+ * 识别产品信息
+ * @param {string} imageBase64 - Base64编码的产品图片
  */
 export const recognizeProduct = async (imageBase64) => {
   const response = await fetch(`${API_BASE_URL}/recognize-product`, {
@@ -166,7 +166,7 @@ export const recognizeProduct = async (imageBase64) => {
   });
 
   if (!response.ok) {
-    let detail = '角色识别失败';
+    let detail = '产品识别失败';
     try {
       const error = await response.json();
       detail = error.detail || detail;
@@ -253,7 +253,7 @@ export const streamPost = async (url, body, onChunk, onDone, onError, signal) =>
 };
 
 /**
- * 流式分析参考卡片
+ * 流式分析竞品详情页图片
  */
 export const analyzeImageStream = (imageBase64, onChunk, onDone, onError, signal) => {
   return streamPost(
@@ -267,7 +267,7 @@ export const analyzeImageStream = (imageBase64, onChunk, onDone, onError, signal
 };
 
 /**
- * 流式融合角色信息与参考卡片分析结果
+ * 流式融合产品信息与竞品分析结果
  */
 export const fusePromptStream = (analysisResult, productInfo, onChunk, onDone, onError, signal) => {
   return streamPost(
@@ -281,7 +281,7 @@ export const fusePromptStream = (analysisResult, productInfo, onChunk, onDone, o
 };
 
 /**
- * 流式识别角色信息
+ * 流式识别产品信息
  */
 export const recognizeProductStream = (imageBase64, onChunk, onDone, onError, signal) => {
   return streamPost(

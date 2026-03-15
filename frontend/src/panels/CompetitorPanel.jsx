@@ -45,7 +45,7 @@ const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated, productInf
 
   const handleAnalyze = async () => {
     if (!competitorImage) {
-      setError('请先上传参考卡片图片');
+      setError('请先上传竞品详情页图片');
       return;
     }
 
@@ -84,14 +84,14 @@ const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated, productInf
   };
 
   return (
-    <GlassCard title="参考卡片分析">
+    <GlassCard title="竞品图片分析">
       <ImageUpload onImageSelect={handleImageSelect} disabled={analyzing} />
 
       <div style={{ marginTop: '16px' }}>
         <ImagePreview
           image={competitorImagePreview}
           loading={false}
-          placeholder="上传参考卡片后显示"
+          placeholder="上传竞品详情页图片后显示"
         />
       </div>
 
@@ -107,7 +107,7 @@ const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated, productInf
             分析中...
           </>
         ) : (
-          '分析卡面风格'
+          '分析视觉风格'
         )}
       </button>
 
@@ -129,7 +129,7 @@ const CompetitorPanel = ({ onPromptGenerated, onFusedPromptGenerated, productInf
         value={prompt}
         onChange={handlePromptChange}
         disabled={analyzing}
-        placeholder="分析后的卡面风格描述将显示在这里，可编辑优化"
+        placeholder="分析后的视觉风格描述将显示在这里，可编辑优化"
       />
 
       <ProductInfoInput

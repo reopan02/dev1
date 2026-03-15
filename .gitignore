@@ -54,6 +54,8 @@ build/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+nul
+nul_file
 
 # ===== Logs =====
 logs/

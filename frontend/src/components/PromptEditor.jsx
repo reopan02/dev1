@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PromptEditor = ({ value, onChange, disabled = false, placeholder = '卡面风格提示词将显示在这里...' }) => {
+const PromptEditor = ({ value, onChange, disabled = false, placeholder = '视觉风格提示词将显示在这里...' }) => {
   const charCount = value ? value.length : 0;
 
   return (
@@ -13,7 +13,7 @@ const PromptEditor = ({ value, onChange, disabled = false, placeholder = '卡面
         textTransform: 'uppercase',
         letterSpacing: '0.5px'
       }}>
-        卡面风格提示词
+        视觉风格提示词
       </div>
       <textarea
         className="prompt-editor"

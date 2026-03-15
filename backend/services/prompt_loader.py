@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def load_reverse_prompt_template() -> str:
-    """加载卡片风格反推提示词模板"""
+    """加载竞品图片反推提示词模板"""
     template_path = Path(__file__).parent.parent.parent / "Guidance" / "reverse_prompt.md"
 
     if not template_path.exists():
@@ -14,7 +14,7 @@ def load_reverse_prompt_template() -> str:
 
 
 def load_fuse_prompt_template() -> str:
-    """加载角色卡片融合提示词模板"""
+    """加载产品图片融合提示词模板"""
     template_path = Path(__file__).parent.parent.parent / "Guidance" / "fuse_prompt.md"
 
     if not template_path.exists():
@@ -26,7 +26,7 @@ def load_fuse_prompt_template() -> str:
 
 def load_recognize_product_template() -> str:
     """
-    加载角色识别提示词模板
+    加载产品识别提示词模板
 
     Returns:
         提示词模板内容

@@ -134,7 +134,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   const handleRecognize = async () => {
     const firstImage = tabData.targetImages?.[0];
     if (!firstImage) {
-      setRecognizeError('请先上传目标角色图片');
+      setRecognizeError('请先上传产品图片');
       return;
     }
 
@@ -170,7 +170,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
   const isGenerating = tabData.status === 'generating';
 
   return (
-    <GlassCard title="卡片生成">
+    <GlassCard title="产品图生成">
       {/* 文生图模式开关 */}
       <div style={{
         display: 'flex',
@@ -242,7 +242,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
             <div key={index} style={{ position: 'relative', width: '80px', height: '80px' }}>
               <img
                 src={preview}
-                alt={`目标图片 ${index + 1}`}
+                alt={`产品图片 ${index + 1}`}
                 onClick={() => setEnlargedImage(preview)}
                 style={{
                   width: '100%',
@@ -291,7 +291,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
             color: 'var(--text-secondary)',
             marginBottom: '8px'
           }}>
-            识别角色信息到左侧输入框
+            识别产品信息到左侧输入框
           </div>
           <button
             className="glass-button"
@@ -305,7 +305,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
                 识别中...
               </>
             ) : (
-              '角色识别'
+              '产品识别'
             )}
           </button>
           {recognizeError && (
@@ -431,7 +431,7 @@ const GenerationPanel = ({ prompt, tabData, onUpdateTab, onProductInfoRecognized
           value={localPrompt}
           onChange={(e) => setLocalPrompt(e.target.value)}
           disabled={isGenerating}
-          placeholder="输入或粘贴生成提示词（也可从左侧分析参考卡片后获取）..."
+          placeholder="输入或粘贴生成提示词（也可从左侧分析竞品图片后获取）..."
           style={{
             width: '100%',
             minHeight: '250px',
